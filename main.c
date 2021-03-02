@@ -37,6 +37,7 @@
 #define ResetPupe                               2
 #define SetSolenoid                             1
 #define ResetSolenoid                           2
+#define ResetSolenoid1                          3 // TODU Clear
 
 
 
