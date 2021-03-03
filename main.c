@@ -53,9 +53,9 @@
 //=======================================
  // Parameters of the optical spot 
 typedef struct {
- 	  uint16_t Coordinate_x1;
-	  uint16_t Coordinate_x2;
-	  uint16_t сenterOfTheOpticalSpot_x;
+ 	  uint16_t coordinate_x1;
+	  uint16_t coordinate_x2;
+	  uint16_t centerOfTheOpticalSpot_x;
 	  uint16_t localMinimum;
 	  uint16_t startОfSearch;
 	  double centroid;
@@ -224,10 +224,10 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM4_Init();
   MX_TIM8_Init();
-  MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_ADC2_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	
 //---------------------------------------
@@ -260,11 +260,22 @@ initVariablesPneumaticSystem(&PneumaticSystem);
   while (1)
   {
 		if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==1){
-
-				for(int i =0; i<4174; i++){
+				opticalSpotSearch(&parametersFirstOpticalSpot); 
+				opticalSpotSearch(&parametersSecondOpticalSpot);
+				opticalSpotSearch(&parametersThirdOpticalSpot);
+			  opticalSpotSearch(&parametersFourhtOpticalSpot);
+			
+			printf("Start\n");
+			for(uint16_t i = 0; i< 500; i++){
 				printf("%u\n", mas_DATA[i]);
-		    }
-			printf("S\n");
+			}
+			
+						//printf("%u\n", parametersFirstOpticalSpot.coordinate_x1);
+		      	//printf("%u\n", parametersFirstOpticalSpot.coordinate_x2);
+			     // printf("%u\n", parametersFirstOpticalSpot.centerOfTheOpticalSpot_x);
+		      	//printf("%u\n", parametersFirstOpticalSpot.localMinimum);
+	
+			printf("Stop\n");
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
 		}
 		
@@ -325,34 +336,34 @@ void SystemClock_Config(void)
 //+++++++++++++++++++++++++++++++++++++++++++++++
 
 void opticalSpotSearch(parametersOpticalSpot* nameStructure){
-	 for(uint16_t i = 0; i<sizeBufDMA; i++){
+	 for(uint16_t i = 20; i<sizeBufDMA; i++){
 			if(mas_DATA[i] <= nameStructure->amplitude){
-			nameStructure->Coordinate_x1 =i;
+			nameStructure->coordinate_x1 =i;
 			break;
 			}
 	 }
-	 for(uint16_t i = nameStructure->Coordinate_x1+2; i<sizeBufDMA; i++){
+	 for(uint16_t i = nameStructure->coordinate_x1+2; i<sizeBufDMA; i++){
 			if(mas_DATA[i] >= nameStructure->amplitude){
-			 nameStructure->Coordinate_x2 = i;
+			 nameStructure->coordinate_x2 = i;
 				break;
 			}
 	 }
-	 for(uint16_t i = nameStructure->Coordinate_x1; i< nameStructure->Coordinate_x2; i++){
+	 for(uint16_t i = nameStructure->coordinate_x1; i< nameStructure->coordinate_x2; i++){
 			uint16_t min = 3500;
 				if(mas_DATA[i] < min){
 					nameStructure->localMinimum =i;
 				}
 	 }
-			nameStructure->сenterOfTheOpticalSpot_x = (nameStructure->Coordinate_x1 + nameStructure->Coordinate_x1)/2;
-			nameStructure->startОfSearch =  nameStructure->Coordinate_x1 + 100;
+			nameStructure->centerOfTheOpticalSpot_x = (nameStructure->coordinate_x1 + nameStructure->coordinate_x1)/2;
+			nameStructure->startОfSearch =  nameStructure->coordinate_x1 + 100;
 }
 // ++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++		
 void сalculationОfTheOpticalSpotCentroid(parametersOpticalSpot* nameStructure){
 		double summaAmplitud_x = 0;
 		double summaAplituda_Pixse_x = 0;
-    for( uint16_t i = (nameStructure->сenterOfTheOpticalSpot_x - nameStructure->reportPixelsToTheLeft); 
-	                   i<(nameStructure->сenterOfTheOpticalSpot_x + nameStructure->reportPixelsToTheRigh); i++ ){
+    for( uint16_t i = (nameStructure->centerOfTheOpticalSpot_x - nameStructure->reportPixelsToTheLeft); 
+	                   i<(nameStructure->centerOfTheOpticalSpot_x + nameStructure->reportPixelsToTheRigh); i++ ){
 			 summaAmplitud_x =  summaAmplitud_x +  (double)mas_DATA[i];
 			 summaAplituda_Pixse_x =  summaAplituda_Pixse_x + (double)mas_DATA[i]*i;
 		}	 
@@ -427,7 +438,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 
 void initVariablesOpticalSpot(parametersOpticalSpot* nemeStract){
 	
-	nemeStract->amplitude = 3100;
+	nemeStract->amplitude = 2900;
 	nemeStract->centroid= 0;
 	nemeStract->measurementMillimeters = 0;
 	nemeStract->localMinimum = 0;
@@ -436,9 +447,9 @@ void initVariablesOpticalSpot(parametersOpticalSpot* nemeStract){
 	nemeStract->resetPointOfTheReportToMeasure = 0;
 	nemeStract->reportPixelsToTheLeft = 50;
 	nemeStract->reportPixelsToTheRigh= 50;
-	nemeStract->Coordinate_x1 = 0;
-	nemeStract->Coordinate_x2 = 0;
-	nemeStract->сenterOfTheOpticalSpot_x = 0;
+	nemeStract->coordinate_x1 = 0;
+	nemeStract->coordinate_x2 = 0;
+	nemeStract->centerOfTheOpticalSpot_x = 0;
 }
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
