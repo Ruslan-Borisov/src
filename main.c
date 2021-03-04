@@ -37,7 +37,7 @@
 #define ResetPupe                               2
 #define SetSolenoid                             1
 #define ResetSolenoid                           2
-#define ResetSolenoid1                          3 // TODU Clear
+
 
 
 
@@ -53,9 +53,9 @@
 //=======================================
  // Parameters of the optical spot 
 typedef struct {
- 	  uint16_t Coordinate_x1;
-	  uint16_t Coordinate_x2;
-	  uint16_t сenterOfTheOpticalSpot_x;
+ 	  uint16_t coordinate_x1;
+	  uint16_t coordinate_x2;
+	  uint16_t centerOfTheOpticalSpot_x;
 	  uint16_t localMinimum;
 	  uint16_t startОfSearch;
 	  double centroid;
@@ -173,8 +173,8 @@ void calculationOfDeflectionMillimeters (parametersOpticalSpot* nameStructure);
 void pressureSensorProcessing(parametersOfThePneumaticSystem *nameStructure);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+// void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
+// void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure);
@@ -224,10 +224,10 @@ int main(void)
   MX_ADC1_Init();
   MX_TIM4_Init();
   MX_TIM8_Init();
-  MX_USART1_UART_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_ADC2_Init();
+  MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	
 //---------------------------------------
@@ -260,11 +260,22 @@ initVariablesPneumaticSystem(&PneumaticSystem);
   while (1)
   {
 		if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==1){
-
-				for(int i =0; i<4174; i++){
+				opticalSpotSearch(&parametersFirstOpticalSpot); 
+				opticalSpotSearch(&parametersSecondOpticalSpot);
+				opticalSpotSearch(&parametersThirdOpticalSpot);
+			  opticalSpotSearch(&parametersFourhtOpticalSpot);
+			
+			printf("Start\n");
+			for(uint16_t i = 0; i< 500; i++){
 				printf("%u\n", mas_DATA[i]);
-		    }
-			printf("S\n");
+			}
+			
+						//printf("%u\n", parametersFirstOpticalSpot.coordinate_x1);
+		      	//printf("%u\n", parametersFirstOpticalSpot.coordinate_x2);
+			     // printf("%u\n", parametersFirstOpticalSpot.centerOfTheOpticalSpot_x);
+		      	//printf("%u\n", parametersFirstOpticalSpot.localMinimum);
+	
+			printf("Stop\n");
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
 		}
 		
@@ -325,34 +336,34 @@ void SystemClock_Config(void)
 //+++++++++++++++++++++++++++++++++++++++++++++++
 
 void opticalSpotSearch(parametersOpticalSpot* nameStructure){
-	 for(uint16_t i = 0; i<sizeBufDMA; i++){
+	 for(uint16_t i = 20; i<sizeBufDMA; i++){
 			if(mas_DATA[i] <= nameStructure->amplitude){
-			nameStructure->Coordinate_x1 =i;
+			nameStructure->coordinate_x1 =i;
 			break;
 			}
 	 }
-	 for(uint16_t i = nameStructure->Coordinate_x1+2; i<sizeBufDMA; i++){
+	 for(uint16_t i = nameStructure->coordinate_x1+2; i<sizeBufDMA; i++){
 			if(mas_DATA[i] >= nameStructure->amplitude){
-			 nameStructure->Coordinate_x2 = i;
+			 nameStructure->coordinate_x2 = i;
 				break;
 			}
 	 }
-	 for(uint16_t i = nameStructure->Coordinate_x1; i< nameStructure->Coordinate_x2; i++){
+	 for(uint16_t i = nameStructure->coordinate_x1; i< nameStructure->coordinate_x2; i++){
 			uint16_t min = 3500;
 				if(mas_DATA[i] < min){
 					nameStructure->localMinimum =i;
 				}
 	 }
-			nameStructure->сenterOfTheOpticalSpot_x = (nameStructure->Coordinate_x1 + nameStructure->Coordinate_x1)/2;
-			nameStructure->startОfSearch =  nameStructure->Coordinate_x1 + 100;
+			nameStructure->centerOfTheOpticalSpot_x = (nameStructure->coordinate_x1 + nameStructure->coordinate_x1)/2;
+			nameStructure->startОfSearch =  nameStructure->coordinate_x1 + 100;
 }
 // ++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++		
 void сalculationОfTheOpticalSpotCentroid(parametersOpticalSpot* nameStructure){
 		double summaAmplitud_x = 0;
 		double summaAplituda_Pixse_x = 0;
-    for( uint16_t i = (nameStructure->сenterOfTheOpticalSpot_x - nameStructure->reportPixelsToTheLeft); 
-	                   i<(nameStructure->сenterOfTheOpticalSpot_x + nameStructure->reportPixelsToTheRigh); i++ ){
+    for( uint16_t i = (nameStructure->centerOfTheOpticalSpot_x - nameStructure->reportPixelsToTheLeft); 
+	                   i<(nameStructure->centerOfTheOpticalSpot_x + nameStructure->reportPixelsToTheRigh); i++ ){
 			 summaAmplitud_x =  summaAmplitud_x +  (double)mas_DATA[i];
 			 summaAplituda_Pixse_x =  summaAplituda_Pixse_x + (double)mas_DATA[i]*i;
 		}	 
@@ -424,54 +435,10 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 	}
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//	void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-//			 HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
-//			 GPIOE->BSRR |=  GPIO_BSRR_BR10;
-//			 HAL_TIM_Base_Stop(&htim8);
-//			 GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
-//			 GPIOD->MODER |= GPIO_MODER_MODER12_0;
-//				
-//			 if((!(GPIOD->ODR& GPIO_ODR_OD12))==SET)
-//					{
-//						 GPIOD->BSRR |=  GPIO_BSRR_BS12;
-//					}
-//				if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==0){
-//						for(int i=0; i<sizeBufDMA; i++){
-//						mas_DATA[i]=mas_ADC1_DMA[i];
-//						}
-//						flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 1;
-//				}
-//				else {
-//						for(int i=0; i<50000; i++){}
-//				}
-//				GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
-//				GPIOD->MODER |= GPIO_MODER_MODER12_1;
-//				GPIOD->AFR[1] |= GPIO_AF2_TIM4;
-//				GPIOE->BSRR |=  GPIO_BSRR_BS10;
-//				HAL_TIM_Base_Start(&htim4);
-//				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-//				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-//				HAL_TIM_Base_Start(&htim8);		
-//	}
-	
-	
-	
-//	void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-//				if(EndReceiv_UART2_DMA2_FromPC==RESET){
-//				flagEndReceiv_UART2_DMA2_FromPC=1;
-//				} 
-//				if(EndReceiv_UART3_DMA2_FromfMicrometer==RESET){ 
-//				flagEndReceiv_UART3_DMA2_FromfMicrometer =1;
-//				} 
-//	}
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	
-
 
 void initVariablesOpticalSpot(parametersOpticalSpot* nemeStract){
 	
-	nemeStract->amplitude = 3100;
+	nemeStract->amplitude = 2900;
 	nemeStract->centroid= 0;
 	nemeStract->measurementMillimeters = 0;
 	nemeStract->localMinimum = 0;
@@ -480,9 +447,9 @@ void initVariablesOpticalSpot(parametersOpticalSpot* nemeStract){
 	nemeStract->resetPointOfTheReportToMeasure = 0;
 	nemeStract->reportPixelsToTheLeft = 50;
 	nemeStract->reportPixelsToTheRigh= 50;
-	nemeStract->Coordinate_x1 = 0;
-	nemeStract->Coordinate_x2 = 0;
-	nemeStract->сenterOfTheOpticalSpot_x = 0;
+	nemeStract->coordinate_x1 = 0;
+	nemeStract->coordinate_x2 = 0;
+	nemeStract->centerOfTheOpticalSpot_x = 0;
 }
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -546,7 +513,7 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 		nemeStructure->FourhtOpticalSpotStructures->amplitude = (rx_input-1000);		
 	  break;
 		case 'M':
-		//*rx_parametr.reset_vall_OLL= (uint8_t)(rx_input-1000);
+	  nemeStructure->resetOllPointOfTheReportToMeasure = (uint8_t)(rx_input-1000);
 	  break;
 		case 'N':
 		nemeStructure->FirstOpticalSpotStructures->resetPointOfTheReportToMeasure = (rx_input-1000); 
