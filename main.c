@@ -124,6 +124,11 @@ typedef struct {
 //=======================================
 //=======================================
 
+char P1x [18];
+
+//=======================================
+//=======================================
+
 
 /* USER CODE END Includes */
 
@@ -173,8 +178,9 @@ void calculationOfDeflectionMillimeters (parametersOpticalSpot* nameStructure);
 void pressureSensorProcessing(parametersOfThePneumaticSystem *nameStructure);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-// void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
-// void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc);
+ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure);
@@ -239,13 +245,21 @@ initVariablesOpticalSpot(&parametersFourhtOpticalSpot);
 initVariablesPneumaticSystem(&PneumaticSystem);
 //---------------------------------------
 //---------------------------------------
+ToStructuresForParser.FirstOpticalSpotStructures = (&parametersFirstOpticalSpot);
+ToStructuresForParser.FourhtOpticalSpotStructures= (&parametersFourhtOpticalSpot);
+ToStructuresForParser.parser_UARTStructures = (&parser_UART);
+ToStructuresForParser.PneumaticSystemStructures = (&PneumaticSystem);
+ToStructuresForParser.resetOllPointOfTheReportToMeasure = 0;
+ToStructuresForParser.SecondOpticalSpotStructures = (&parametersSecondOpticalSpot);
+ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot);
+
 
 //****************************************
 		HAL_ADC_Start(&hadc1);
 //---------------------------------------
 		HAL_ADC_Start_DMA(&hadc1,(uint32_t*)&mas_ADC1_DMA, sizeBufDMA);
 //*************************************** 
-		HAL_TIM_Base_Start(&htim2);
+    HAL_UART_Receive_DMA(&huart2, (uint8_t *)&parser_UART.ID, 5); 
 //***************************************
 		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 //*************************************** 
@@ -260,25 +274,28 @@ initVariablesPneumaticSystem(&PneumaticSystem);
   while (1)
   {
 		if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==1){
+		
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
 				opticalSpotSearch(&parametersSecondOpticalSpot);
 				opticalSpotSearch(&parametersThirdOpticalSpot);
 			  opticalSpotSearch(&parametersFourhtOpticalSpot);
 			
-			printf("Start\n");
-			for(uint16_t i = 0; i< 500; i++){
-				printf("%u\n", mas_DATA[i]);
-			}
 			
-						//printf("%u\n", parametersFirstOpticalSpot.coordinate_x1);
-		      	//printf("%u\n", parametersFirstOpticalSpot.coordinate_x2);
-			     // printf("%u\n", parametersFirstOpticalSpot.centerOfTheOpticalSpot_x);
-		      	//printf("%u\n", parametersFirstOpticalSpot.localMinimum);
+			if(flagEndTransfer_UART2_DMA1_ForPC ==0){
+				flagEndTransfer_UART2_DMA1_ForPC =1;
+				sprintf(P1x, "A%d%d%d%d\n", (parametersFirstOpticalSpot.coordinate_x1+1000),
+																		(parametersFirstOpticalSpot.coordinate_x2+1000), 
+																		(parametersFirstOpticalSpot.centerOfTheOpticalSpot_x+1000),
+																		(parametersFirstOpticalSpot.localMinimum+1000));		 
+    		
+				HAL_UART_Transmit_DMA(&huart2, (uint8_t*)P1x, 18); 				
+			}
 	
-			printf("Stop\n");
+						//printf("%u\n", parametersFirstOpticalSpot.coordinate_x1);
+
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
 		}
-		
+
 		
     /* USER CODE END WHILE */
 
@@ -336,20 +353,21 @@ void SystemClock_Config(void)
 //+++++++++++++++++++++++++++++++++++++++++++++++
 
 void opticalSpotSearch(parametersOpticalSpot* nameStructure){
-	 for(uint16_t i = 20; i<sizeBufDMA; i++){
+	 for(uint16_t i = 200; i<sizeBufDMA; i++){
 			if(mas_DATA[i] <= nameStructure->amplitude){
 			nameStructure->coordinate_x1 =i;
 			break;
 			}
 	 }
-	 for(uint16_t i = nameStructure->coordinate_x1+2; i<sizeBufDMA; i++){
+	 for(uint16_t i = nameStructure->coordinate_x1; i<sizeBufDMA; i++){
 			if(mas_DATA[i] >= nameStructure->amplitude){
 			 nameStructure->coordinate_x2 = i;
 				break;
 			}
 	 }
+	 uint16_t min = 3500;
 	 for(uint16_t i = nameStructure->coordinate_x1; i< nameStructure->coordinate_x2; i++){
-			uint16_t min = 3500;
+			
 				if(mas_DATA[i] < min){
 					nameStructure->localMinimum =i;
 				}
@@ -405,6 +423,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 					{
 						 GPIOD->BSRR |=  GPIO_BSRR_BS12;
 					}
+				
 				if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==0){
 						for(int i=0; i<sizeBufDMA; i++){
 						mas_DATA[i]=mas_ADC1_DMA[i];
@@ -414,11 +433,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 				else {
 						for(int i=0; i<50000; i++){}
 				}
-				GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
-				GPIOD->MODER |= GPIO_MODER_MODER12_1;
-				GPIOD->AFR[1] |= GPIO_AF2_TIM4;
+			
+//				GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
+//				GPIOD->MODER |= GPIO_MODER_MODER12_1;
+				
+        MX_TIM4_Init();
 				GPIOE->BSRR |=  GPIO_BSRR_BS10;
-				HAL_TIM_Base_Start(&htim4);
 				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 				HAL_TIM_Base_Start(&htim8);		
@@ -426,12 +446,22 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 // ++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++
 	void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	
 				if(EndReceiv_UART2_DMA2_FromPC==RESET){
 				flagEndReceiv_UART2_DMA1_FromPC=1;
+			  parserOfDataFromPC(&ToStructuresForParser);
 				} 
 				if(EndReceiv_UART3_DMA1_FromfMicrometer==RESET){ 
 				flagEndReceiv_UART3_DMA1_FromfMicrometer =1;
 				} 
+				
+	}
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+		void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
+	  
+			flagEndTransfer_UART2_DMA1_ForPC = 0;
+				
 	}
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -472,9 +502,10 @@ void initFlags(){
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
-	uint16_t rx_input = (uint16_t)(atoi(nemeStructure->parser_UARTStructures->input_mas));
-
-	switch(nemeStructure->parser_UARTStructures->ID)
+	GPIOD->BSRR |=  GPIO_BSRR_BR5;
+	uint16_t rx_input = (uint16_t)(atoi((*nemeStructure).parser_UARTStructures->input_mas));
+   
+	switch((*nemeStructure).parser_UARTStructures->ID)
 	{ 
 		case 'A':
 		nemeStructure->FirstOpticalSpotStructures->reportPixelsToTheRigh = (rx_input-1000);
@@ -501,7 +532,7 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 		nemeStructure->FourhtOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);	
 	  break;
 		case 'I':
-		nemeStructure->FirstOpticalSpotStructures->amplitude = (rx_input-1000);
+		(*nemeStructure).FirstOpticalSpotStructures->amplitude = (rx_input-1000);
 	  break;
 		case 'J':
 		nemeStructure->SecondOpticalSpotStructures->amplitude = (rx_input-1000);
@@ -551,8 +582,13 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 			if(rx_input==1002){nemeStructure->PneumaticSystemStructures->activationPump = ResetPupe;}
 		  if(rx_input==1003){nemeStructure->PneumaticSystemStructures->activatingSolenoidValve = SetSolenoid;}
 		  if(rx_input==1004){nemeStructure->PneumaticSystemStructures->activatingSolenoidValve = ResetSolenoid;}
-	  break;		
+	  break;
+			defulte:
+			
+    break;			
 	}
+	
+
 }
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
