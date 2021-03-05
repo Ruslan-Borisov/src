@@ -265,7 +265,7 @@ ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot)
 //*************************************** 
 		HAL_TIM_Base_Start(&htim8);
 //***************************************	
-		HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+	  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 //***************************************
   /* USER CODE END 2 */
 
@@ -274,7 +274,7 @@ ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot)
   while (1)
   {
 		if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==1){
-		
+		    parametersFirstOpticalSpot.startОfSearch = 100;
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
 				opticalSpotSearch(&parametersSecondOpticalSpot);
 				opticalSpotSearch(&parametersThirdOpticalSpot);
@@ -365,8 +365,8 @@ void opticalSpotSearch(parametersOpticalSpot* nameStructure){
 				break;
 			}
 	 }
-	 uint16_t min = 3500;
-	 for(uint16_t i = nameStructure->coordinate_x1; i< nameStructure->coordinate_x2; i++){
+	 short min = 3500;
+	 for(uint16_t i = nameStructure->coordinate_x1; i< nameStructure->coordinate_x2+200; i++){
 			
 				if(mas_DATA[i] < min){
 					nameStructure->localMinimum =i;
@@ -426,7 +426,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 				
 				if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==0){
 						for(int i=0; i<sizeBufDMA; i++){
-						mas_DATA[i]=mas_ADC1_DMA[i];
+						mas_DATA[i]=(short)mas_ADC1_DMA[i];
 						}
 						flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 1;
 				}
@@ -438,10 +438,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 //				GPIOD->MODER |= GPIO_MODER_MODER12_1;
 				
         MX_TIM4_Init();
-				GPIOE->BSRR |=  GPIO_BSRR_BS10;
-				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+				for(uint8_t i=0; i<5; i++){}
 				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-				HAL_TIM_Base_Start(&htim8);		
+				for(uint8_t i=0; i<5; i++){}
+				HAL_TIM_Base_Start(&htim8);	
+        GPIOE->BSRR |=  GPIO_BSRR_BS10;	
+        HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					
 	}
 // ++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++
