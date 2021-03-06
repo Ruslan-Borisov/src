@@ -291,8 +291,7 @@ ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot)
 				HAL_UART_Transmit_DMA(&huart2, (uint8_t*)P1x, 18); 				
 			}
 	
-						//printf("%u\n", parametersFirstOpticalSpot.coordinate_x1);
-
+				
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
 		}
 
@@ -359,20 +358,21 @@ void opticalSpotSearch(parametersOpticalSpot* nameStructure){
 			break;
 			}
 	 }
-	 for(uint16_t i = nameStructure->coordinate_x1; i<sizeBufDMA; i++){
+	 for(uint16_t i = nameStructure->coordinate_x1+10; i<sizeBufDMA; i++){
 			if(mas_DATA[i] >= nameStructure->amplitude){
 			 nameStructure->coordinate_x2 = i;
 				break;
 			}
 	 }
 	 short min = 3500;
-	 for(uint16_t i = nameStructure->coordinate_x1; i< nameStructure->coordinate_x2+200; i++){
+	 for(uint16_t i = nameStructure->coordinate_x1-10; i< nameStructure->coordinate_x2+10; i++){
 			
 				if(mas_DATA[i] < min){
+					min = mas_DATA[i];
 					nameStructure->localMinimum =i;
 				}
 	 }
-			nameStructure->centerOfTheOpticalSpot_x = (nameStructure->coordinate_x1 + nameStructure->coordinate_x1)/2;
+			nameStructure->centerOfTheOpticalSpot_x = (nameStructure->coordinate_x1 + nameStructure->coordinate_x2)/2;
 			nameStructure->startОfSearch =  nameStructure->coordinate_x1 + 100;
 }
 // ++++++++++++++++++++++++++++++++++++++++++++++
