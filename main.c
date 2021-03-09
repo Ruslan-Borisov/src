@@ -265,7 +265,7 @@ ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot)
 //*************************************** 
 		HAL_TIM_Base_Start(&htim8);
 //***************************************	
-		HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+	  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 //***************************************
   /* USER CODE END 2 */
 
@@ -274,7 +274,7 @@ ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot)
   while (1)
   {
 		if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==1){
-		
+		    parametersFirstOpticalSpot.startОfSearch = 100;
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
 				opticalSpotSearch(&parametersSecondOpticalSpot);
 				opticalSpotSearch(&parametersThirdOpticalSpot);
@@ -291,8 +291,7 @@ ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot)
 				HAL_UART_Transmit_DMA(&huart2, (uint8_t*)P1x, 18); 				
 			}
 	
-						//printf("%u\n", parametersFirstOpticalSpot.coordinate_x1);
-
+				
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
 		}
 
@@ -359,20 +358,21 @@ void opticalSpotSearch(parametersOpticalSpot* nameStructure){
 			break;
 			}
 	 }
-	 for(uint16_t i = nameStructure->coordinate_x1; i<sizeBufDMA; i++){
+	 for(uint16_t i = nameStructure->coordinate_x1+10; i<sizeBufDMA; i++){
 			if(mas_DATA[i] >= nameStructure->amplitude){
 			 nameStructure->coordinate_x2 = i;
 				break;
 			}
 	 }
-	 uint16_t min = 3500;
-	 for(uint16_t i = nameStructure->coordinate_x1; i< nameStructure->coordinate_x2; i++){
+	 short min = 3500;
+	 for(uint16_t i = nameStructure->coordinate_x1-10; i< nameStructure->coordinate_x2+10; i++){
 			
 				if(mas_DATA[i] < min){
+					min = mas_DATA[i];
 					nameStructure->localMinimum =i;
 				}
 	 }
-			nameStructure->centerOfTheOpticalSpot_x = (nameStructure->coordinate_x1 + nameStructure->coordinate_x1)/2;
+			nameStructure->centerOfTheOpticalSpot_x = (nameStructure->coordinate_x1 + nameStructure->coordinate_x2)/2;
 			nameStructure->startОfSearch =  nameStructure->coordinate_x1 + 100;
 }
 // ++++++++++++++++++++++++++++++++++++++++++++++
@@ -426,7 +426,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 				
 				if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==0){
 						for(int i=0; i<sizeBufDMA; i++){
-						mas_DATA[i]=mas_ADC1_DMA[i];
+						mas_DATA[i]=(short)mas_ADC1_DMA[i];
 						}
 						flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 1;
 				}
@@ -438,10 +438,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 //				GPIOD->MODER |= GPIO_MODER_MODER12_1;
 				
         MX_TIM4_Init();
-				GPIOE->BSRR |=  GPIO_BSRR_BS10;
-				HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+				for(uint8_t i=0; i<5; i++){}
 				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-				HAL_TIM_Base_Start(&htim8);		
+				for(uint8_t i=0; i<5; i++){}
+				HAL_TIM_Base_Start(&htim8);	
+        GPIOE->BSRR |=  GPIO_BSRR_BS10;	
+        HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					
 	}
 // ++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++
