@@ -129,7 +129,7 @@ typedef union {
 //=======================================
 //=======================================
 // Oll fiags
-		volatile uint8_t flagsEndOfTheCCDLineSurvey_ADC1_DMA2;
+		volatile  uint8_t flagsEndOfTheCCDLineSurvey_ADC1_DMA2;
 		extern volatile uint8_t flagEndTransfer_UART2_DMA1_ForPC;
 		volatile uint8_t flagEndReceiv_UART2_DMA1_FromPC;
 		volatile uint8_t flagEndReceiv_UART3_DMA1_FromfMicrometer;
