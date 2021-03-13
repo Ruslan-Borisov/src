@@ -31,6 +31,9 @@
 //=======================================
 #define EndReceiv_UART2_DMA2_FromPC            (DMA1->LISR & DMA_HISR_TCIF5)
 #define EndReceiv_UART3_DMA1_FromfMicrometer   (DMA1->LISR & DMA_LISR_TCIF1)
+#define flagPump                               (GPIOC->IDR |=  GPIO_BSRR_BS10;)
+
+
 #define sizeBufDMA                              4174
 #define size_ADC2                               10
 #define SetPupe                                 1
@@ -94,8 +97,7 @@ typedef struct {
 typedef struct {
 		double PressureFromPiezoelectricSensor;
 	  double setPressure;
-		uint8_t activationPump;
-		uint8_t activatingSolenoidValve;
+	
 }parametersOfThePneumaticSystem;
 
 //=======================================
@@ -134,6 +136,8 @@ typedef union {
 		volatile uint8_t flagEndReceiv_UART2_DMA1_FromPC;
 		volatile uint8_t flagEndReceiv_UART3_DMA1_FromfMicrometer;
 		volatile uint8_t dataRequestForPC;
+	  volatile uint8_t activationPump;
+		volatile uint8_t activatingSolenoidValve;
 //=======================================
 //=======================================
 // data arrays
@@ -296,6 +300,8 @@ ToStructuresForParser.resetOllPointOfTheReportToMeasure = 0;
 ToStructuresForParser.SecondOpticalSpotStructures = (&parametersSecondOpticalSpot);
 ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot);
 //----------------------------------------
+    HAL_UART_Receive_DMA(&huart3, (uint8_t *)&parser_UART.ID, 5);  
+//----------------------------------------
     HAL_UART_Receive_DMA(&huart2, (uint8_t *)&parser_UART.ID, 5);    
 //****************************************
 		HAL_ADC_Start(&hadc1);
@@ -331,6 +337,13 @@ ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		// pump
+		if(activationPump == SetPupe){GPIOC->BSRR |=  GPIO_BSRR_BS7; activationPump=0;}
+		if(activationPump == ResetPupe){GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump=0;}
+		
+		// SetSolenoid 
+		if(activatingSolenoidValve == SetSolenoid){GPIOC->BSRR |=  GPIO_BSRR_BS8; activatingSolenoidValve =0;}
+		if(activatingSolenoidValve == ResetSolenoid){GPIOC->BSRR |=  GPIO_BSRR_BR8; activatingSolenoidValve =0;}
 		
 		if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==1){
 			  GPIOC->BSRR |=  GPIO_BSRR_BR12;	
@@ -630,8 +643,6 @@ void initVariablesFourhtOpticalSpot(){
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void initVariablesPneumaticSystem(parametersOfThePneumaticSystem* nemeStract){
 	nemeStract->PressureFromPiezoelectricSensor =0;
-	nemeStract->activatingSolenoidValve=0;
-	nemeStract->activationPump=0;
 	nemeStract->setPressure=0;
 }
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -642,6 +653,8 @@ void initFlags(){
 	  flagEndReceiv_UART3_DMA1_FromfMicrometer = 0;
 		flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;
 		dataRequestForPC = 0;
+		activationPump =0;
+	 activatingSolenoidValve =0;
 }
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -722,10 +735,10 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
    		if(rx_input==1014){dataRequestForPC = request_pressure;} 
 	  break;
 			case 'X':
-			if(rx_input==1001){nemeStructure->PneumaticSystemStructures->activationPump = SetPupe;} 
-			if(rx_input==1002){nemeStructure->PneumaticSystemStructures->activationPump = ResetPupe;}
-		  if(rx_input==1003){nemeStructure->PneumaticSystemStructures->activatingSolenoidValve = SetSolenoid;}
-		  if(rx_input==1004){nemeStructure->PneumaticSystemStructures->activatingSolenoidValve = ResetSolenoid;}
+			if(rx_input==1001){activationPump = SetPupe;} 
+			if(rx_input==1003){activationPump = ResetPupe;}
+		  if(rx_input==1002){activatingSolenoidValve = SetSolenoid;}
+		  if(rx_input==1004){activatingSolenoidValve = ResetSolenoid;}
 	  break;
 			defulte:
 			
