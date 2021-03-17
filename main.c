@@ -29,13 +29,15 @@
 /* USER CODE BEGIN Includes */
 //=======================================
 //=======================================
-#define EndReceiv_UART2_DMA2_FromPC            (DMA1->LISR & DMA_HISR_TCIF5)
-#define EndReceiv_UART3_DMA1_FromfMicrometer   (DMA1->LISR & DMA_LISR_TCIF1)
+#define EndReceiv_UART2_DMA1_FromPC               (DMA1->LISR & DMA_HISR_TCIF5)
+#define EndReceiv_UART3_DMA1_FromfMicrometer      (DMA1->LISR & DMA_LISR_TCIF1)
+#define EndReceiv_UART4_DMA1_FromPresuareSensor   (DMA1->LISR & DMA_LISR_TCIF2)
+
+
 #define flagPump                               (GPIOC->IDR |=  GPIO_BSRR_BS10;)
 
 
 #define sizeBufDMA                              4174
-#define size_ADC2                               10
 #define SetPupe                                 1
 #define ResetPupe                               2
 #define SetSolenoid                             1
@@ -61,6 +63,7 @@
 //================================================
 #define sizeCharCoord                                         18
 #define sizeCharCentroid                                      15
+#define sizeCharPresuare                                       4
 
 //=======================================
 //=======================================
@@ -94,10 +97,17 @@ typedef struct {
 //=======================================
 //=======================================
 // Parameters Of The Pneumatic System
+
+ typedef union {
+	  char charPresuare[sizeCharPresuare];
+	  float  floatPresuare;
+	 } unioncharPresuareStructures ;
+
+//=======================================
+//=======================================
 typedef struct {
-		double PressureFromPiezoelectricSensor;
-	  double setPressure;
-	
+		float PressureFromPiezoelectricSensor;
+	  double setPressure;  
 }parametersOfThePneumaticSystem;
 
 //=======================================
@@ -125,11 +135,17 @@ typedef struct {
 typedef union {
  char transferPackageForLabVIEW_coordinate[sizeCharCoord]; 
  char transferPackageForLabVIEW_centoide[sizeCharCentroid];
-   	
 }unionCharForUART;   
 
+typedef union {
+ uint8_t byteMass[2]; 
+ uint16_t dataMicrometrs;
+}unionbyteMass; 
+
+
+ //=======================================
 //=======================================
-//=======================================
+
 // Oll fiags
 		volatile  uint8_t flagsEndOfTheCCDLineSurvey_ADC1_DMA2;
 		extern volatile uint8_t flagEndTransfer_UART2_DMA1_ForPC;
@@ -143,7 +159,8 @@ typedef union {
 // data arrays
    uint16_t mas_ADC1_DMA[sizeBufDMA];         
    short mas_DATA[sizeBufDMA];
-   short mas_DATA_Pressure[size_ADC2];
+   float floatDatadataMicrometrs;
+  
    
 //=======================================
 //=======================================
@@ -155,6 +172,10 @@ typedef union {
  pointerToStructuresForParser ToStructuresForParser;
  dataParser_UART parser_UART;
  unionCharForUART CharForUART;
+ unioncharPresuareStructures charPresuare;
+ unionbyteMass byteMass;
+
+
 
 //=======================================
 //=======================================
@@ -235,6 +256,12 @@ void convertToCharAndPassUart_coordinate(parametersOpticalSpot *nemeStructe);
 void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unioncharPresuareStructures *structure2);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void filterByteMassMicromrtrs(unionbyteMass *structure);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 /* USER CODE END PFP */
 
@@ -277,8 +304,8 @@ int main(void)
   MX_TIM8_Init();
   MX_TIM2_Init();
   MX_USART2_UART_Init();
-  MX_ADC2_Init();
   MX_USART3_UART_Init();
+  MX_UART4_Init();
   /* USER CODE BEGIN 2 */
 	
 //----------------------------------------
@@ -300,9 +327,11 @@ ToStructuresForParser.resetOllPointOfTheReportToMeasure = 0;
 ToStructuresForParser.SecondOpticalSpotStructures = (&parametersSecondOpticalSpot);
 ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot);
 //----------------------------------------
-    HAL_UART_Receive_DMA(&huart3, (uint8_t *)&parser_UART.ID, 5);  
+    HAL_UART_Receive_DMA(&huart3, (uint8_t *)&byteMass.byteMass, 2);  
 //----------------------------------------
     HAL_UART_Receive_DMA(&huart2, (uint8_t *)&parser_UART.ID, 5);    
+//****************************************
+    HAL_UART_Receive_DMA(&huart4, (uint8_t *)&charPresuare , 4);    
 //****************************************
 		HAL_ADC_Start(&hadc1);
 //---------------------------------------
@@ -325,7 +354,7 @@ ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot)
 			GPIOE->BSRR |=  GPIO_BSRR_BS10;
 				
 		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
-//*************************************** 
+//**************************************** 
 		HAL_TIM_Base_Start(&htim8);
 //***************************************	
 	  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
@@ -498,16 +527,8 @@ void calculationOfDeflectionMillimeters (parametersOpticalSpot* nameStructure){
 }
 // ++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++
-void pressureSensorProcessing(parametersOfThePneumaticSystem *nameStructure){
-	uint16_t sum_ADC2_DMA = 0;
-	for(int i = 0; i< size_ADC2; i++){                
-	HAL_ADC_Start(&hadc2);// 
-  while(!(ADC2->SR & ADC_SR_EOC)); 
-  mas_DATA_Pressure[i] = ADC2->DR;
-	sum_ADC2_DMA = sum_ADC2_DMA + mas_DATA_Pressure[i];
-	}
-	nameStructure->PressureFromPiezoelectricSensor = ((float)sum_ADC2_DMA/((float)(size_ADC2)) - 578)*75842/4095;
-}
+
+
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -549,22 +570,17 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 //+++++++++++++++++++++++++++++++++++++++++++++++
 	void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	
-				if(EndReceiv_UART2_DMA2_FromPC==RESET){
+				if(EndReceiv_UART2_DMA1_FromPC==RESET){
 				flagEndReceiv_UART2_DMA1_FromPC=1;
 			  parserOfDataFromPC(&ToStructuresForParser);
 				} 
 				if(EndReceiv_UART3_DMA1_FromfMicrometer==RESET){ 
+				filterByteMassMicromrtrs(&byteMass);
 				flagEndReceiv_UART3_DMA1_FromfMicrometer =1;
 				} 
-				
-	}
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart){
-	  	
-			
-			
-				
+				if(EndReceiv_UART4_DMA1_FromPresuareSensor==RESET){ 
+				atoiOfDataPresuareSensor(&PneumaticSystem, &charPresuare);
+				}
 	}
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -760,28 +776,35 @@ void convertToCharAndPassUart_coordinate(parametersOpticalSpot *nemeStructe){
         while(flagEndTransfer_UART2_DMA1_ForPC >0){}
 				}
 				HAL_UART_Transmit_DMA(&huart2, (uint8_t*)&CharForUART.transferPackageForLabVIEW_coordinate, sizeCharCoord+1);// 	
-			  flagEndTransfer_UART2_DMA1_ForPC =1;
-			
-
-			
+			  flagEndTransfer_UART2_DMA1_ForPC =1;		
 }
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe){
-
 			sprintf(CharForUART.transferPackageForLabVIEW_centoide, "I%c%d%d\n",nemeStructe->id_OpticalSpot,((int)((nemeStructe->centroid+1000)*100000)),(nemeStructe->centerOfTheOpticalSpot_x+1000));
 			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
 				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
 				}
 			   HAL_UART_Transmit_DMA(&huart2, (uint8_t*)CharForUART.transferPackageForLabVIEW_centoide, sizeCharCentroid+1);	
-				  flagEndTransfer_UART2_DMA1_ForPC =1;
-			
-			
+				 flagEndTransfer_UART2_DMA1_ForPC =1;			
 }
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
+void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unioncharPresuareStructures *structure2 ){
+  structure1->PressureFromPiezoelectricSensor = structure2->floatPresuare;
+	}
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	void filterByteMassMicromrtrs(unionbyteMass *structure){
+	floatDatadataMicrometrs = (float)(structure->dataMicrometrs);
+	}
+	
+	
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 
 /* USER CODE END 4 */
 
