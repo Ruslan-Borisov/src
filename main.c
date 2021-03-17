@@ -139,7 +139,7 @@ typedef union {
 
 typedef union {
  uint8_t byteMass[2]; 
- uint16_t dataMicrometrs;
+ int16_t dataMicrometrs;
 }unionbyteMass; 
 
 
@@ -159,7 +159,7 @@ typedef union {
 // data arrays
    uint16_t mas_ADC1_DMA[sizeBufDMA];         
    short mas_DATA[sizeBufDMA];
-   float floatDatadataMicrometrs;
+   int16_t floatDatadataMicrometrs;
   
    
 //=======================================
@@ -327,7 +327,7 @@ ToStructuresForParser.resetOllPointOfTheReportToMeasure = 0;
 ToStructuresForParser.SecondOpticalSpotStructures = (&parametersSecondOpticalSpot);
 ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot);
 //----------------------------------------
-    HAL_UART_Receive_DMA(&huart3, (uint8_t *)&byteMass.byteMass, 2);  
+    HAL_UART_Receive_DMA(&huart3, (uint8_t *)&byteMass, 2);  
 //----------------------------------------
     HAL_UART_Receive_DMA(&huart2, (uint8_t *)&parser_UART.ID, 5);    
 //****************************************
@@ -359,23 +359,28 @@ ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot)
 //***************************************	
 	  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 //***************************************
-
+GPIOC->BSRR |=  GPIO_BSRR_BS7; 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		// pump
-		if(activationPump == SetPupe){GPIOC->BSRR |=  GPIO_BSRR_BS7; activationPump=0;}
-		if(activationPump == ResetPupe){GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump=0;}
 		
+		if(charPresuare.floatPresuare >65000){
+		GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump=0;
+		}
+		else if(charPresuare.floatPresuare <65000){
+		// pump
+			if(activationPump == SetPupe){GPIOC->BSRR |=  GPIO_BSRR_BS7; activationPump=0; }
+			if(activationPump == ResetPupe){GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump=0;}
+	}
 		// SetSolenoid 
 		if(activatingSolenoidValve == SetSolenoid){GPIOC->BSRR |=  GPIO_BSRR_BS8; activatingSolenoidValve =0;}
 		if(activatingSolenoidValve == ResetSolenoid){GPIOC->BSRR |=  GPIO_BSRR_BR8; activatingSolenoidValve =0;}
 		
 		if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==1){
-			  GPIOC->BSRR |=  GPIO_BSRR_BR12;	
+			//  GPIOC->BSRR |=  GPIO_BSRR_BR12;	
 		  
 			// Поиск координат
 			if(dataRequestForPC == request_X1_X2_X_Xmin_FirstOpticalSpot){
@@ -798,7 +803,7 @@ void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unionc
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	void filterByteMassMicromrtrs(unionbyteMass *structure){
-	floatDatadataMicrometrs = (float)(structure->dataMicrometrs);
+	floatDatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
 	}
 	
 	
