@@ -64,6 +64,7 @@
 #define sizeCharCoord                                         18
 #define sizeCharCentroid                                      15
 #define sizeCharPresuare                                       4
+#define sizeCharPresuareForUART                               14
 
 //=======================================
 //=======================================
@@ -101,6 +102,7 @@ typedef struct {
  typedef union {
 	  char charPresuare[sizeCharPresuare];
 	  float  floatPresuare;
+	  int16_t int16_DatadataMicrometrs;
 	 } unioncharPresuareStructures ;
 
 //=======================================
@@ -120,21 +122,11 @@ typedef struct{
 
 //=======================================
 //=======================================
-typedef struct {
-   parametersOpticalSpot *FirstOpticalSpotStructures; 
-   parametersOpticalSpot *SecondOpticalSpotStructures; 
-   parametersOpticalSpot *ThirdOpticalSpotStructures; 
-   parametersOpticalSpot *FourhtOpticalSpotStructures;
-   parametersOfThePneumaticSystem *PneumaticSystemStructures;
-	 dataParser_UART *parser_UARTStructures;
-	 uint8_t resetOllPointOfTheReportToMeasure;
-   	
-}pointerToStructuresForParser;
-//=======================================
-//=======================================
+
 typedef union {
  char transferPackageForLabVIEW_coordinate[sizeCharCoord]; 
  char transferPackageForLabVIEW_centoide[sizeCharCentroid];
+ char transferPackageForLabVIEW_Presuatr[sizeCharPresuareForUART];
 }unionCharForUART;   
 
 typedef union {
@@ -142,7 +134,19 @@ typedef union {
  int16_t dataMicrometrs;
 }unionbyteMass; 
 
-
+typedef struct {
+   parametersOpticalSpot *FirstOpticalSpotStructures; 
+   parametersOpticalSpot *SecondOpticalSpotStructures; 
+   parametersOpticalSpot *ThirdOpticalSpotStructures; 
+   parametersOpticalSpot *FourhtOpticalSpotStructures;
+	 unionbyteMass *unionbyteMassStructures;  
+   parametersOfThePneumaticSystem *PneumaticSystemStructures;
+	 dataParser_UART *parser_UARTStructures;
+	 uint8_t resetOllPointOfTheReportToMeasure;
+   	
+}pointerToStructuresForParser;
+//=======================================
+//=======================================
  //=======================================
 //=======================================
 
@@ -159,7 +163,8 @@ typedef union {
 // data arrays
    uint16_t mas_ADC1_DMA[sizeBufDMA];         
    short mas_DATA[sizeBufDMA];
-   int16_t floatDatadataMicrometrs;
+   int16_t int16_DatadataMicrometrs;
+   int int_DatadataMicrometrs;
   
    
 //=======================================
@@ -262,6 +267,9 @@ void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe);
 void filterByteMassMicromrtrs(unionbyteMass *structure);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 /* USER CODE END PFP */
 
@@ -326,6 +334,7 @@ ToStructuresForParser.PneumaticSystemStructures = (&PneumaticSystem);
 ToStructuresForParser.resetOllPointOfTheReportToMeasure = 0;
 ToStructuresForParser.SecondOpticalSpotStructures = (&parametersSecondOpticalSpot);
 ToStructuresForParser.ThirdOpticalSpotStructures = (&parametersThirdOpticalSpot);
+ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 //----------------------------------------
     HAL_UART_Receive_DMA(&huart3, (uint8_t *)&byteMass, 2);  
 //----------------------------------------
@@ -421,6 +430,9 @@ GPIOC->BSRR |=  GPIO_BSRR_BS7;
 				calculationOpticalSpotCentroid(&parametersFourhtOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersFourhtOpticalSpot);				
 			}
+						if(dataRequestForPC==request_pressure){
+						convertToCharAndPassUart_Presuare(&ToStructuresForParser);
+						}
 
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
 		}
@@ -795,6 +807,17 @@ void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe){
 }
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe){
+			sprintf(CharForUART.transferPackageForLabVIEW_Presuatr, "O%d%d\n",(int)(nemeStructe->PneumaticSystemStructures->PressureFromPiezoelectricSensor*100)+10000000,
+	           int_DatadataMicrometrs+50000);
+			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
+				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
+				}
+			   HAL_UART_Transmit_DMA(&huart2, (uint8_t*)CharForUART.transferPackageForLabVIEW_Presuatr, sizeCharPresuareForUART+1);	
+				 flagEndTransfer_UART2_DMA1_ForPC =1;			
+}
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unioncharPresuareStructures *structure2 ){
   structure1->PressureFromPiezoelectricSensor = structure2->floatPresuare;
@@ -803,7 +826,8 @@ void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unionc
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	void filterByteMassMicromrtrs(unionbyteMass *structure){
-	floatDatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
+	//int16_DatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
+		int_DatadataMicrometrs = (int)(structure->dataMicrometrs);
 	}
 	
 	
