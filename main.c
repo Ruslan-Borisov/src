@@ -156,7 +156,7 @@ typedef struct {
 		volatile uint8_t flagEndReceiv_UART2_DMA1_FromPC;
 		volatile uint8_t flagEndReceiv_UART3_DMA1_FromfMicrometer;
 		volatile uint8_t dataRequestForPC;
-	  volatile uint8_t activationPump;
+	           uint8_t activationPump;
 		volatile uint8_t activatingSolenoidValve;
 //=======================================
 //=======================================
@@ -368,7 +368,7 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 //***************************************	
 	  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 //***************************************
-GPIOC->BSRR |=  GPIO_BSRR_BS7; 
+//GPIOC->BSRR |=  GPIO_BSRR_BS7; 
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -377,12 +377,12 @@ GPIOC->BSRR |=  GPIO_BSRR_BS7;
   {
 		
 		if(charPresuare.floatPresuare >65000){
-		GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump=0;
+		GPIOC->BSRR |=  GPIO_BSRR_BS7; 
 		}
 		else if(charPresuare.floatPresuare <65000){
 		// pump
-			if(activationPump == SetPupe){GPIOC->BSRR |=  GPIO_BSRR_BS7; activationPump=0; }
-			if(activationPump == ResetPupe){GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump=0;}
+			if(activationPump == SetPupe){ GPIOC->BSRR |=  GPIO_BSRR_BS7;  activationPump = 0;}
+			if(activationPump == ResetPupe){GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump = 0;}
 	}
 		// SetSolenoid 
 		if(activatingSolenoidValve == SetSolenoid){GPIOC->BSRR |=  GPIO_BSRR_BS8; activatingSolenoidValve =0;}
@@ -826,8 +826,8 @@ void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unionc
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	void filterByteMassMicromrtrs(unionbyteMass *structure){
-	//int16_DatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
-		int_DatadataMicrometrs = (int)(structure->dataMicrometrs);
+int16_DatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
+	int_DatadataMicrometrs = (int)int16_DatadataMicrometrs;
 	}
 	
 	
