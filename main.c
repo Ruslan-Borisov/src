@@ -368,7 +368,7 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 //***************************************	
 	  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
 //***************************************
-//GPIOC->BSRR |=  GPIO_BSRR_BS7; 
+ GPIOC->BSRR |=  GPIO_BSRR_BR7; 
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -377,7 +377,7 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
   {
 		
 		if(charPresuare.floatPresuare >65000){
-		GPIOC->BSRR |=  GPIO_BSRR_BS7; 
+		GPIOC->BSRR |=  GPIO_BSRR_BR7; 
 		}
 		else if(charPresuare.floatPresuare <65000){
 		// pump
