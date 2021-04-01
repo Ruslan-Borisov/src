@@ -65,7 +65,18 @@
 #define sizeCharCentroid                                      15
 #define sizeCharPresuare                                       4
 #define sizeCharPresuareForUART                               14
-
+//================================================
+#define endFirstSegment                                       810
+#define endSecondSegment                                      1230
+//================================================
+#define coefficient_k1                                        2588110
+#define coefficient_b1                                        0
+//================================================
+#define coefficient_k2                                        73560690
+#define coefficient_b2                                        40637400
+//================================================
+#define coefficient_k3                                        12562400
+#define coefficient_b3                                        104682000
 //=======================================
 //=======================================
 #include <stdio.h>
@@ -93,6 +104,7 @@ typedef struct {
 	  uint16_t saveCenterOfTheOpticalSpot_x;
   	double pointOfTheReportToMeasure;
 	  double measurementMillimeters;
+	  double measurementPresuare;
 }parametersOpticalSpot;
 
 //=======================================
@@ -270,7 +282,9 @@ void filterByteMassMicromrtrs(unionbyteMass *structure);
 void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+void pressureCalculation(parametersOpticalSpot* nemeStructure);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -376,10 +390,11 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
   while (1)
   {
 		
-		if(charPresuare.floatPresuare >65000){
+		if(charPresuare.floatPresuare >107500){
 		GPIOC->BSRR |=  GPIO_BSRR_BR7; 
+		activationPump = 0;
 		}
-		else if(charPresuare.floatPresuare <65000){
+		else if(charPresuare.floatPresuare <107500){
 		// pump
 			if(activationPump == SetPupe){ GPIOC->BSRR |=  GPIO_BSRR_BS7;  activationPump = 0;}
 			if(activationPump == ResetPupe){GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump = 0;}
@@ -826,8 +841,27 @@ void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unionc
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	void filterByteMassMicromrtrs(unionbyteMass *structure){
-int16_DatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
+  int16_DatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
 	int_DatadataMicrometrs = (int)int16_DatadataMicrometrs;
+	}
+	
+	
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	
+	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	void pressureCalculation(parametersOpticalSpot* nemeStructure){
+		 int millimeters = (int)(nemeStructure->measurementMillimeters*1000);
+		if(millimeters <= endFirstSegment){
+			nemeStructure->measurementPresuare = coefficient_k1*millimeters-coefficient_b1;
+		}	
+		if(millimeters > endFirstSegment && millimeters <= endSecondSegment ){
+		  nemeStructure->measurementPresuare = coefficient_k2*millimeters-coefficient_b2;
+		}	
+		if(millimeters > endSecondSegment){
+		  nemeStructure->measurementPresuare = coefficient_k3*millimeters-coefficient_b3;
+		}
 	}
 	
 	
