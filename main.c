@@ -64,7 +64,7 @@
 #define sizeCharCoord                                         18
 #define sizeCharCentroid                                      15
 #define sizeCharPresuare                                       4
-#define sizeCharPresuareForUART                               14
+#define sizeCharPresuareForUART                               23
 //================================================
 #define endFirstSegment                                       810
 #define endSecondSegment                                      1230
@@ -104,7 +104,7 @@ typedef struct {
 	  uint16_t saveCenterOfTheOpticalSpot_x;
   	double pointOfTheReportToMeasure;
 	  double measurementMillimeters;
-	  double measurementPresuare;
+	  int measurementPresuare;
 }parametersOpticalSpot;
 
 //=======================================
@@ -279,7 +279,7 @@ void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe);
 void filterByteMassMicromrtrs(unionbyteMass *structure);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe);
+void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe,  parametersOpticalSpot *nemeStructe1);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void pressureCalculation(parametersOpticalSpot* nemeStructure);
@@ -446,7 +446,8 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
         convertToCharAndPassUart_centroid(&parametersFourhtOpticalSpot);				
 			}
 						if(dataRequestForPC==request_pressure){
-						convertToCharAndPassUart_Presuare(&ToStructuresForParser);
+					  pressureCalculation(&parametersFirstOpticalSpot);
+						convertToCharAndPassUart_Presuare(&ToStructuresForParser, &parametersFirstOpticalSpot);
 						}
 
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
@@ -822,9 +823,9 @@ void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe){
 }
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe){
-			sprintf(CharForUART.transferPackageForLabVIEW_Presuatr, "O%d%d\n",(int)(nemeStructe->PneumaticSystemStructures->PressureFromPiezoelectricSensor*100)+10000000,
-	           int_DatadataMicrometrs+50000);
+void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe,  parametersOpticalSpot *nemeStructe1){
+			sprintf(CharForUART.transferPackageForLabVIEW_Presuatr, "O%d%d\%d\n",(int)(nemeStructe->PneumaticSystemStructures->PressureFromPiezoelectricSensor*100)+10000000,
+	           int_DatadataMicrometrs+50000, nemeStructe1->measurementPresuare+100000000);
 			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
 				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
 				}
