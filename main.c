@@ -515,8 +515,13 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-// ++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++
+
+
+
+/* 
+фУНКЦИЯ ВЫЧИСЛЕНИЯ КООРДИНАТ ОПТИЧЕСКОГО ПЯТНА
+OPTICAL SPOT COORDINATE CALCULATION FUNCTION 
+*/
 void opticalSpotSearch(parametersOpticalSpot* nameStructure){
 	   nameStructure->errSerchCoordinate = 0;
 	 for(uint16_t i = nameStructure->saveCenterOfTheOpticalSpot_x - nameStructure->rangeReport_Right_Left; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
@@ -544,8 +549,10 @@ void opticalSpotSearch(parametersOpticalSpot* nameStructure){
 	    nameStructure->saveCenterOfTheOpticalSpot_x = nameStructure->centerOfTheOpticalSpot_x; 
 	 
 }
-// ++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++		
+/* 
+фУНКЦИЯ ВЫЧИСЛЕНИЯ ЦЕНТРОЙДА ОПТИЧЕСКОГО ПЯТНА
+    OPTICAL SPOT CENTROID CALCULATION FUNCTION  
+*/		
 void calculationOpticalSpotCentroid(parametersOpticalSpot* nameStructure){
 	
 		double summaAmplitud_x = 0;
@@ -557,23 +564,24 @@ void calculationOpticalSpotCentroid(parametersOpticalSpot* nameStructure){
 		}	 
 	 nameStructure->centroid = summaAplituda_Pixse_x/summaAmplitud_x;
 }
-// ++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++
+/* 
+ФУНКЦИЯ УСТАНОВКИ ТОЧКИ ОТСЧЕТА
+REFERENCE POINT FUNCTION 
+*/		
 void pointReportToMeasure(parametersOpticalSpot* nameStructure){
 		nameStructure->pointOfTheReportToMeasure = nameStructure->centroid;
 }
-// ++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++
+/* 
+ФУНКЦИЯ РАСЧЕТА ПРОГИБА МЕМБРАНЫ В МИЛЛИМЕТРАХ
+FUNCTION FOR CALCULATING THE DEFLECTION OF THE MEMBRANE IN MILLIMETERS 
+*/
 void calculationOfDeflectionMillimeters (parametersOpticalSpot* nameStructure){
 	 nameStructure->measurementMillimeters = (nameStructure->centroid  - nameStructure->pointOfTheReportToMeasure)*0.007;
 }
-// ++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/* 
+ОБРАБОТЧИК ПРЕРЫВАНИЯ DMA ПО ЗАПОЛНЕНИЮ БУФЕРА
+DMA INTERRUPT HANDLE ON BUFFER FULL
+*/
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 			 HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
 	     GPIOD->BSRR |=  GPIO_BSRR_BR6;
@@ -608,8 +616,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
         GPIOE->BSRR |=  GPIO_BSRR_BS10;	
         HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					
 	}
-// ++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++
+
+	
+	/*
+	ОБРАБОТЧИК ПРЕРЫВАНИЯ DMA ОКНЧАНИЮ ПЕРЕДАЧИ ДАННЫХ В UART
+	DMA INTERRUPT HANDLER TO END DATA TRANSFER TO UART 
+	*/
+	
 	void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
 	
 				if(EndReceiv_UART2_DMA1_FromPC==RESET){
@@ -624,10 +637,12 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 				atoiOfDataPresuareSensor(&PneumaticSystem, &charPresuare);
 				}
 	}
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+/*
+	ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ ПЕРВОГО ОПТИЧЕСКОГО ПЯТНА
+	INITIALIZING FIRST OPTICAL SPOT VARIABLES 
+	*/
 void initVariablesFirstOpticalSpot(){
-	
 	parametersFirstOpticalSpot.id_OpticalSpot = 'A';
 	parametersFirstOpticalSpot.saveCenterOfTheOpticalSpot_x = 394; 
 	parametersFirstOpticalSpot.amplitude = 2900;
@@ -643,9 +658,11 @@ void initVariablesFirstOpticalSpot(){
 	parametersFirstOpticalSpot.coordinate_x2 = 0;
 	parametersFirstOpticalSpot.centerOfTheOpticalSpot_x = 0;
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ ВТОРОГО ОПТИЧЕСКОГО ПЯТНА
+INITIALIZING VARIABLES OF THE SECOND OPTICAL SPOT 
+*/
 void initVariablesSecondOpticalSpot(){
-	
 	parametersSecondOpticalSpot.id_OpticalSpot = 'B'; 
 	parametersSecondOpticalSpot.saveCenterOfTheOpticalSpot_x = 1246;
 	parametersSecondOpticalSpot.amplitude = 2900;
@@ -661,9 +678,11 @@ void initVariablesSecondOpticalSpot(){
 	parametersSecondOpticalSpot.coordinate_x2 = 0;
 	parametersSecondOpticalSpot.centerOfTheOpticalSpot_x = 0;
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ ТРЕТЬЕГО ОПТИЧЕСКОГО ПЯТНА
+INITIALIZING THE VARIABLES OF THE THIRD OPTICAL SPOT 
+*/
 void initVariablesThirdOpticalSpot(){
-	
 	parametersThirdOpticalSpot.id_OpticalSpot = 'C'; 
 	parametersThirdOpticalSpot.saveCenterOfTheOpticalSpot_x = 2097;
 	parametersThirdOpticalSpot.amplitude = 2900;
@@ -679,7 +698,10 @@ void initVariablesThirdOpticalSpot(){
 	parametersThirdOpticalSpot.coordinate_x2 = 0;
 	parametersThirdOpticalSpot.centerOfTheOpticalSpot_x = 0;
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ ЧЕТВЕРТОГО ОПТИЧЕСКОГО ПЯТНА
+INITIALIZING VARIABLES OF THE FOURTH OPTICAL SPOT 
+*/
 void initVariablesFourhtOpticalSpot(){
 	
 	parametersFourhtOpticalSpot.id_OpticalSpot = 'D'; 
@@ -697,14 +719,18 @@ void initVariablesFourhtOpticalSpot(){
 	parametersFourhtOpticalSpot.coordinate_x2 = 0;
 	parametersFourhtOpticalSpot.centerOfTheOpticalSpot_x = 0;
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ ПНЕВМАТИЧЕСКОЙ СИСТЕМЫ
+INITIALIZING PNEUMATIC SYSTEM VARIABLES 
+*/
 void initVariablesPneumaticSystem(parametersOfThePneumaticSystem* nemeStract){
 	nemeStract->PressureFromPiezoelectricSensor =0;
 	nemeStract->setPressure=0;
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+ИНИЦИАЛИЗАЦИЯ ФЛАГОВ
+FLAG INITIALIZATION 
+*/
 void initFlags(){
 		flagEndTransfer_UART2_DMA1_ForPC = 0;
 		flagEndReceiv_UART2_DMA1_FromPC = 0;
@@ -714,8 +740,10 @@ void initFlags(){
 		activationPump =0;
 	 activatingSolenoidValve =0;
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+ОБРАБОТКА ДАННЫХ ПРИНЯТЫХ ОТ ПК (ПАРСИНГ)
+PROCESSING OF DATA ACCEPTED FROM PC (PARSING) 
+*/
 void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 	GPIOD->BSRR |=  GPIO_BSRR_BR5;
 	uint16_t rx_input = (uint16_t)(atoi((*nemeStructure).parser_UARTStructures->input_mas));
