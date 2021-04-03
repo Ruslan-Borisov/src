@@ -78,6 +78,7 @@
 #define coefficient_k3                                        12562400
 #define coefficient_b3                                        104682000
 //=======================================
+#define resetPointFirstFirstOpticalSpot                       1
 //=======================================
 #include <stdio.h>
 #include <string.h>
@@ -445,7 +446,15 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 				calculationOpticalSpotCentroid(&parametersFourhtOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersFourhtOpticalSpot);				
 			}
+						
+			if(parametersFirstOpticalSpot.resetPointOfTheReportToMeasure==resetPointFirstFirstOpticalSpot){
+			pointReportToMeasure(&parametersFirstOpticalSpot);
+			}
+						
+			
 						if(dataRequestForPC==request_pressure){
+						opticalSpotSearch(&parametersFirstOpticalSpot); 
+						calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);				
 					  pressureCalculation(&parametersFirstOpticalSpot);
 						convertToCharAndPassUart_Presuare(&ToStructuresForParser, &parametersFirstOpticalSpot);
 						}
@@ -849,9 +858,6 @@ void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unionc
 	
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-	
-	//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	void pressureCalculation(parametersOpticalSpot* nemeStructure){
 		 int millimeters = (int)(nemeStructure->measurementMillimeters*1000);
 		if(millimeters <= endFirstSegment){
@@ -864,6 +870,8 @@ void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unionc
 		  nemeStructure->measurementPresuare = coefficient_k3*millimeters-coefficient_b3;
 		}
 	}
+	
+
 	
 	
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
