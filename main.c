@@ -64,9 +64,21 @@
 #define sizeCharCoord                                         18
 #define sizeCharCentroid                                      15
 #define sizeCharPresuare                                       4
-#define sizeCharPresuareForUART                               14
-
+#define sizeCharPresuareForUART                               23
+//================================================
+#define endFirstSegment                                       810
+#define endSecondSegment                                      1230
+//================================================
+#define coefficient_k1                                        2588110
+#define coefficient_b1                                        0
+//================================================
+#define coefficient_k2                                        73560690
+#define coefficient_b2                                        40637400
+//================================================
+#define coefficient_k3                                        12562400
+#define coefficient_b3                                        104682000
 //=======================================
+#define resetPointFirstFirstOpticalSpot                       1
 //=======================================
 #include <stdio.h>
 #include <string.h>
@@ -93,6 +105,7 @@ typedef struct {
 	  uint16_t saveCenterOfTheOpticalSpot_x;
   	double pointOfTheReportToMeasure;
 	  double measurementMillimeters;
+	  int measurementPresuare;
 }parametersOpticalSpot;
 
 //=======================================
@@ -267,10 +280,12 @@ void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe);
 void filterByteMassMicromrtrs(unionbyteMass *structure);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe);
+void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe,  parametersOpticalSpot *nemeStructe1);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
+void pressureCalculation(parametersOpticalSpot* nemeStructure);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -376,10 +391,11 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
   while (1)
   {
 		
-		if(charPresuare.floatPresuare >65000){
+		if(charPresuare.floatPresuare >107500){
 		GPIOC->BSRR |=  GPIO_BSRR_BR7; 
+		activationPump = 0;
 		}
-		else if(charPresuare.floatPresuare <65000){
+		else if(charPresuare.floatPresuare <107500){
 		// pump
 			if(activationPump == SetPupe){ GPIOC->BSRR |=  GPIO_BSRR_BS7;  activationPump = 0;}
 			if(activationPump == ResetPupe){GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump = 0;}
@@ -430,8 +446,17 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 				calculationOpticalSpotCentroid(&parametersFourhtOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersFourhtOpticalSpot);				
 			}
+						
+			if(parametersFirstOpticalSpot.resetPointOfTheReportToMeasure==resetPointFirstFirstOpticalSpot){
+			pointReportToMeasure(&parametersFirstOpticalSpot);
+			}
+						
+			
 						if(dataRequestForPC==request_pressure){
-						convertToCharAndPassUart_Presuare(&ToStructuresForParser);
+						opticalSpotSearch(&parametersFirstOpticalSpot); 
+						calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);				
+					  pressureCalculation(&parametersFirstOpticalSpot);
+						convertToCharAndPassUart_Presuare(&ToStructuresForParser, &parametersFirstOpticalSpot);
 						}
 
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
@@ -807,9 +832,9 @@ void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe){
 }
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe){
-			sprintf(CharForUART.transferPackageForLabVIEW_Presuatr, "O%d%d\n",(int)(nemeStructe->PneumaticSystemStructures->PressureFromPiezoelectricSensor*100)+10000000,
-	           int_DatadataMicrometrs+50000);
+void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe,  parametersOpticalSpot *nemeStructe1){
+			sprintf(CharForUART.transferPackageForLabVIEW_Presuatr, "O%d%d\%d\n",(int)(nemeStructe->PneumaticSystemStructures->PressureFromPiezoelectricSensor*100)+10000000,
+	           int_DatadataMicrometrs+50000, nemeStructe1->measurementPresuare+100000000);
 			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
 				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
 				}
@@ -826,9 +851,27 @@ void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unionc
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 	void filterByteMassMicromrtrs(unionbyteMass *structure){
-int16_DatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
+  int16_DatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
 	int_DatadataMicrometrs = (int)int16_DatadataMicrometrs;
 	}
+	
+	
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+	void pressureCalculation(parametersOpticalSpot* nemeStructure){
+		 int millimeters = (int)(nemeStructure->measurementMillimeters*1000);
+		if(millimeters <= endFirstSegment){
+			nemeStructure->measurementPresuare = coefficient_k1*millimeters-coefficient_b1;
+		}	
+		if(millimeters > endFirstSegment && millimeters <= endSecondSegment ){
+		  nemeStructure->measurementPresuare = coefficient_k2*millimeters-coefficient_b2;
+		}	
+		if(millimeters > endSecondSegment){
+		  nemeStructure->measurementPresuare = coefficient_k3*millimeters-coefficient_b3;
+		}
+	}
+	
+
 	
 	
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
