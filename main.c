@@ -85,57 +85,61 @@
 #include <math.h>
 #include <stdlib.h>
 
-//=======================================
-//=======================================
- // Parameters of the optical spot 
+/*
+Parameters of the optical spot
+*/ 
 typedef struct {
-	  char  id_OpticalSpot;
- 	  uint16_t coordinate_x1;
-	  uint16_t coordinate_x2;
-	  uint16_t centerOfTheOpticalSpot_x;
-	  uint16_t localMinimum;
-	  uint16_t startOfSearch;
-	  double centroid;
-	  uint16_t amplitude; 
-	  uint16_t reportPixelsToTheLeft;
-	  uint16_t reportPixelsToTheRigh;
-	  uint8_t resetPointOfTheReportToMeasure:1;
-	  uint8_t errSerchCoordinate;
-	  uint8_t rangeReport_Right_Left;
-	  uint16_t saveCenterOfTheOpticalSpot_x;
-  	double pointOfTheReportToMeasure;
-	  double measurementMillimeters;
-	  int measurementPresuare;
+	  char  id_OpticalSpot; // ИНДЕНТЕФИКАТОР ОПТИЧЕСКОГО ПЯТНА (OPTICAL SPOT IDENTIFIER )
+ 	  uint16_t coordinate_x1; // НАЧАЛО ОПТИЧЕСКОГО ПЯТНА (START OF OPTICAL SPOT )
+	  uint16_t coordinate_x2; // КОНЕЦ ОПТИЧЕСКОГО ПЯТНА (END OF OPTICAL SPOT )
+	  uint16_t centerOfTheOpticalSpot_x; // ЦЕНТР ОПТИЧЕСКОГО ПЯТНА (OPTICAL SPOT CENTER )
+	  uint16_t localMinimum; // ЛОКАЛЬНЫЙ МИНИМУМ ОПТИЧЕСКОГО ПЯТНА (LOCAL MINIMUM OF OPTICAL SPOT )
+	  uint16_t startOfSearch; // КООРДИНАТА ДЛЯ НАЧАЛА ПОИСКА ОПТИЧЕСКОГО ПЯТНА (COORDINATE TO START OPTICAL SPOT SEARCH)
+	  double centroid; // ЦЕНТРОИД ОПТИЧЕСКОГО ПЯТНА (OPTICAL SPOT CENTROID)
+	  uint16_t amplitude; // ЗАДАННОЕ ЗНАЧЕНИЕ АМПЛИТУДЫ ДЛЯ ПОИСКА ОПТИЧЕСКОГО ПЯТНА(SET AMPLITUDE VALUE FOR OPTICAL SPOT SEARCH )
+	  uint16_t reportPixelsToTheLeft;//ОТСТУП ОТ ЦЕНТРА ВЛЕВО ДЛЯ ФОРМИРОВАНИЯ ЦЕНТРОИДА ОПТИЧЕСКОГО ПЯТНА(LEFT CENTER LEFT FOR THE FORMATION OF THE CENTROID OF THE OPTICAL SPOT) 
+	  uint16_t reportPixelsToTheRigh; // ОТСТУП ОТ ЦЕНТРА ВПРАВО ДЛЯ ФОРМИРОВАНИЯ ЦЕНТРОИДА ОПТИЧЕСКОГО ПЯТНА (RETURNING FROM THE CENTER TO THE RIGHT FOR THE FORMATION OF THE CENTROID OF THE OPTICAL SPOT )
+	  uint8_t resetPointOfTheReportToMeasure:1;// ФЛАГ СБРОСА НАЧАЛА ОТЧЕТА ДЛЯ ИЗМЕРЕНИЙ (RESET FLAG START MEASUREMENT REPORT )
+	  uint8_t errSerchCoordinate;// оОШИБКА ПОИСКА ОПТИЧЕСКОГО ПЯТНА(OPTICAL SPOT SEARCH ERROR )
+	  uint8_t rangeReport_Right_Left; // ДИАПАЗОН ПОИСКА ОПТИЧЕСКОГО ПЯТНА(OPTICAL SPOT SEARCH RANGE )
+	  uint16_t saveCenterOfTheOpticalSpot_x;// СОХРАНЕННОЕ ЗНАЧЕНИЕ ЦЕНТРОИДА ОПТИЧЕСКОГО ПЯТНА(STORED OPTICAL SPOT CENTROID VALUE )
+  	double pointOfTheReportToMeasure; // ЗНАЧЕНИЕ ЦЕНТРОИДА ОТ КОТОРОЙ ВЕДЕТСЯ ОТСЧЕТ(НОЛЬ)(CENTROID VALUE COUNTED FROM (ZERO) )
+	  double measurementMillimeters; // ИЗМЕРЕННОЕ ЗНАЧЕНИЕ В МИЛЛИМЕТРАХ(MEASURED VALUE IN MILLIMETERS )
+	  int measurementPresuare; // ИЗМЕРЕННОЕ ЗНАЧЕНИЕ В ПАСКАЛЯХ(MEASURED VALUE IN PASCALS )
 }parametersOpticalSpot;
 
-//=======================================
-//=======================================
-// Parameters Of The Pneumatic System
-
+/* 
+UNION ДЛЯ КОНВЕРТАЦИИ ДАВЛЕНИЯ ПРИНЯТОГО ЧЕРЕЗ UART
+UNION FOR CONVERSION OF PRESSURE RECEIVED THROUGH UART 
+Parameters Of The Pneumatic System
+*/
  typedef union {
-	  char charPresuare[sizeCharPresuare];
+	  char charPresuare[sizeCharPresuare]; // 
 	  float  floatPresuare;
 	  int16_t int16_DatadataMicrometrs;
 	 } unioncharPresuareStructures ;
 
-//=======================================
-//=======================================
+/*
+ДАВЛЕНИЕ ИЗМЕРЕННОЕ ПЬЕЗОЭЛЕКТРИЧЕСКИМ ДАТЧИКОМ И ЗАДАННОЕ ЗНАЧЕНИЕ
+PRESSURE MEASURED BY PIEZOELECTRIC SENSOR AND SET POINT
+*/
 typedef struct {
-		float PressureFromPiezoelectricSensor;
-	  double setPressure;  
+		float PressureFromPiezoelectricSensor; // ДАВЛЕНИЕ С ПЬЕЗОЭЛЕКТРИЧЕСКОГО ДАТЧИКА ДАВЛЕНИЙ(PRESSURE FROM PIEZOELECTRIC PRESSURE SENSOR )
+	  double setPressure; // ЗАДАННОЕ ЗНАЧЕНИЕ ДАВЛЕНИЯ ПРИНЯТОЕ ЧЕРЕЗ UART(PRESET VALUE ACCEPTED VIA UART )
 }parametersOfThePneumaticSystem;
 
-//=======================================
-//=======================================
-// pointer to structures for the parser
+/*
+ПРИНЯТЫЕ ДАННЫЕ ЧЕРЕЗ UART ОТ ПК
+DATA RECEIVED VIA UART FROM PC
+*/ 
 typedef struct{
 	char ID;
 	char input_mas[4];
 }dataParser_UART;
-
-//=======================================
-//=======================================
-
+/*
+UNION ДЛЯ ПЕРЕДАЧИ ДАННЫХ НА ПК В ВИДЕ CHAR
+UNION FOR DATA TRANSFER TO PC AS CHAR 
+*/
 typedef union {
  char transferPackageForLabVIEW_coordinate[sizeCharCoord]; 
  char transferPackageForLabVIEW_centoide[sizeCharCentroid];
@@ -274,7 +278,7 @@ void convertToCharAndPassUart_coordinate(parametersOpticalSpot *nemeStructe);
 void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
- void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unioncharPresuareStructures *structure2);
+ void unionOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unioncharPresuareStructures *structure2);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void filterByteMassMicromrtrs(unionbyteMass *structure);
@@ -516,6 +520,64 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
+/* 
+ОБРАБОТЧИК ПРЕРЫВАНИЯ DMA (АЦП) ПО ЗАПОЛНЕНИЮ БУФЕРА
+DMA INTERRUPT HANDLE ON BUFFER FULL
+*/
+void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
+			 HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
+	     GPIOD->BSRR |=  GPIO_BSRR_BR6;
+			 GPIOE->BSRR |=  GPIO_BSRR_BR10;
+			 HAL_TIM_Base_Stop(&htim8);
+			 GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
+			 GPIOD->MODER |= GPIO_MODER_MODER12_0;
+				
+			 if((!(GPIOD->ODR& GPIO_ODR_OD12))==SET)
+					{
+						 GPIOD->BSRR |=  GPIO_BSRR_BS12;
+					}
+				
+				if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==0){
+						for(int i=0; i<sizeBufDMA; i++){
+						mas_DATA[i]=(short)mas_ADC1_DMA[i];
+						}
+						flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 1;
+				}
+				else {
+						for(int i=0; i<50000; i++){}
+				}
+			
+//				GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
+//				GPIOD->MODER |= GPIO_MODER_MODER12_1;
+				GPIOD->BSRR |=  GPIO_BSRR_BS6;
+        MX_TIM4_Init();
+				for(uint8_t i=0; i<5; i++){}
+				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+				for(uint8_t i=0; i<5; i++){}
+				HAL_TIM_Base_Start(&htim8);	
+        GPIOE->BSRR |=  GPIO_BSRR_BS10;	
+        HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					
+	}
+
+	
+	/*
+ОБРАБОТЧИК ПРЕРЫВАНИЯ DMA ОКНЧАНИЮ ПРИЕМА ДАННЫХ UART
+DMA INTERRUPT HANDLER AT DATA RECEIVE UART
+	*/
+	void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
+	
+				if(EndReceiv_UART2_DMA1_FromPC==RESET){
+				flagEndReceiv_UART2_DMA1_FromPC=1;
+			  parserOfDataFromPC(&ToStructuresForParser);
+				} 
+				if(EndReceiv_UART3_DMA1_FromfMicrometer==RESET){ 
+				filterByteMassMicromrtrs(&byteMass);
+				flagEndReceiv_UART3_DMA1_FromfMicrometer =1;
+				} 
+				if(EndReceiv_UART4_DMA1_FromPresuareSensor==RESET){ 
+				unionOfDataPresuareSensor(&PneumaticSystem, &charPresuare);
+				}
+	}
 
 
 /* 
@@ -578,66 +640,6 @@ FUNCTION FOR CALCULATING THE DEFLECTION OF THE MEMBRANE IN MILLIMETERS
 void calculationOfDeflectionMillimeters (parametersOpticalSpot* nameStructure){
 	 nameStructure->measurementMillimeters = (nameStructure->centroid  - nameStructure->pointOfTheReportToMeasure)*0.007;
 }
-/* 
-ОБРАБОТЧИК ПРЕРЫВАНИЯ DMA ПО ЗАПОЛНЕНИЮ БУФЕРА
-DMA INTERRUPT HANDLE ON BUFFER FULL
-*/
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-			 HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
-	     GPIOD->BSRR |=  GPIO_BSRR_BR6;
-			 GPIOE->BSRR |=  GPIO_BSRR_BR10;
-			 HAL_TIM_Base_Stop(&htim8);
-			 GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
-			 GPIOD->MODER |= GPIO_MODER_MODER12_0;
-				
-			 if((!(GPIOD->ODR& GPIO_ODR_OD12))==SET)
-					{
-						 GPIOD->BSRR |=  GPIO_BSRR_BS12;
-					}
-				
-				if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==0){
-						for(int i=0; i<sizeBufDMA; i++){
-						mas_DATA[i]=(short)mas_ADC1_DMA[i];
-						}
-						flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 1;
-				}
-				else {
-						for(int i=0; i<50000; i++){}
-				}
-			
-//				GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
-//				GPIOD->MODER |= GPIO_MODER_MODER12_1;
-				GPIOD->BSRR |=  GPIO_BSRR_BS6;
-        MX_TIM4_Init();
-				for(uint8_t i=0; i<5; i++){}
-				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-				for(uint8_t i=0; i<5; i++){}
-				HAL_TIM_Base_Start(&htim8);	
-        GPIOE->BSRR |=  GPIO_BSRR_BS10;	
-        HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					
-	}
-
-	
-	/*
-	ОБРАБОТЧИК ПРЕРЫВАНИЯ DMA ОКНЧАНИЮ ПЕРЕДАЧИ ДАННЫХ В UART
-	DMA INTERRUPT HANDLER TO END DATA TRANSFER TO UART 
-	*/
-	
-	void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
-	
-				if(EndReceiv_UART2_DMA1_FromPC==RESET){
-				flagEndReceiv_UART2_DMA1_FromPC=1;
-			  parserOfDataFromPC(&ToStructuresForParser);
-				} 
-				if(EndReceiv_UART3_DMA1_FromfMicrometer==RESET){ 
-				filterByteMassMicromrtrs(&byteMass);
-				flagEndReceiv_UART3_DMA1_FromfMicrometer =1;
-				} 
-				if(EndReceiv_UART4_DMA1_FromPresuareSensor==RESET){ 
-				atoiOfDataPresuareSensor(&PneumaticSystem, &charPresuare);
-				}
-	}
-
 /*
 	ИНИЦИАЛИЗАЦИЯ ПЕРЕМЕННЫХ ПЕРВОГО ОПТИЧЕСКОГО ПЯТНА
 	INITIALIZING FIRST OPTICAL SPOT VARIABLES 
@@ -833,10 +835,11 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 	
 
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+ПРЕОБРАЗОВАНИЕ КООРДИНАТ ОПТИЧЕСКОГО ПЯТНА В СТРОКУ И ПЕРЕДАЧА В UART
+CONVERSION OF OPTICAL SPOT COORDINATES TO STRING AND TRANSFER TO UART
+*/
 void convertToCharAndPassUart_coordinate(parametersOpticalSpot *nemeStructe){
-	
 			sprintf(CharForUART.transferPackageForLabVIEW_coordinate, "%c%d%d%d%d%d\n",nemeStructe->id_OpticalSpot, (nemeStructe->coordinate_x1+1000),
 																		(nemeStructe->coordinate_x2+1000), 
 																		(nemeStructe->centerOfTheOpticalSpot_x+1000),
@@ -848,8 +851,10 @@ void convertToCharAndPassUart_coordinate(parametersOpticalSpot *nemeStructe){
 				HAL_UART_Transmit_DMA(&huart2, (uint8_t*)&CharForUART.transferPackageForLabVIEW_coordinate, sizeCharCoord+1);// 	
 			  flagEndTransfer_UART2_DMA1_ForPC =1;		
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+ПРЕОБРАЗОВАНИЕ ЦЕНТРА ОПТИЧЕСКОГО ПЯТНА И ЦЕНТРОЙДА В СТРОКУ И ПЕРЕДАЧА В UART
+CONVERTING THE CENTER OF THE OPTICAL SPOT AND THE CENTER TO A STRING AND TRANSFER TO THE UART 
+*/
 void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe){
 			sprintf(CharForUART.transferPackageForLabVIEW_centoide, "I%c%d%d\n",nemeStructe->id_OpticalSpot,((int)((nemeStructe->centroid+1000)*100000)),(nemeStructe->centerOfTheOpticalSpot_x+1000));
 			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
@@ -858,8 +863,10 @@ void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe){
 			   HAL_UART_Transmit_DMA(&huart2, (uint8_t*)CharForUART.transferPackageForLabVIEW_centoide, sizeCharCentroid+1);	
 				 flagEndTransfer_UART2_DMA1_ForPC =1;			
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+ПРЕОБРАЗОВАНИЕ ДАВЛЕНИЙ(ОТ ДАТЧИКА И РАСЧЕТНОГО) И ПРОГИБА(ОТ МИКРОМЕТРА) В СТРОКУ И ПЕРЕДАЧА В UART
+CONVERSION OF PRESSURE (FROM SENSOR AND DESIGNED) AND DEFLECTION (FROM MICROMETER) INTO A STRING AND TRANSFER TO UART 
+*/
 void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe,  parametersOpticalSpot *nemeStructe1){
 			sprintf(CharForUART.transferPackageForLabVIEW_Presuatr, "O%d%d\%d\n",(int)(nemeStructe->PneumaticSystemStructures->PressureFromPiezoelectricSensor*100)+10000000,
 	           int_DatadataMicrometrs+50000, nemeStructe1->measurementPresuare+100000000);
@@ -869,23 +876,27 @@ void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe
 			   HAL_UART_Transmit_DMA(&huart2, (uint8_t*)CharForUART.transferPackageForLabVIEW_Presuatr, sizeCharPresuareForUART+1);	
 				 flagEndTransfer_UART2_DMA1_ForPC =1;			
 }
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unioncharPresuareStructures *structure2 ){
+/*
+КОНВЕРТИРОВАНИЕ ДАВЛЕНИЯ С ИСПОЛЬЗОВАНИЕМ UNION
+PRESSURE CONVERSION WITH UNION 
+*/
+void unionOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unioncharPresuareStructures *structure2 ){
   structure1->PressureFromPiezoelectricSensor = structure2->floatPresuare;
 	}
 
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+СКЛЕЙКА БАЙТОВ ПРИНЯТЫХ ЧЕРЕЗ UART ОТ МИКРОМЕТРА
+GLUING BYTE ACCEPTED VIA UART FROM MICROMETER 
+*/
 	void filterByteMassMicromrtrs(unionbyteMass *structure){
   int16_DatadataMicrometrs =structure->byteMass[1]|(structure->byteMass[0]<<8);
 	int_DatadataMicrometrs = (int)int16_DatadataMicrometrs;
 	}
 	
-	
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+/*
+РАСЧЕТ ДАВЛЕНИЯ С ИСПОЛЬЗОВАНИЕМ ФНКЦИИ ЛИНЕЙНОЙ ИНТЕРПОЛЯЦИИ	
+PRESSURE CALCULATION USING LINEAR INTERPOLATION FUNCTION 
+	*/
 	void pressureCalculation(parametersOpticalSpot* nemeStructure){
 		 int millimeters = (int)(nemeStructure->measurementMillimeters*1000);
 		if(millimeters <= endFirstSegment){
@@ -900,10 +911,6 @@ void atoiOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unionc
 	}
 	
 
-	
-	
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-//+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 /* USER CODE END 4 */
