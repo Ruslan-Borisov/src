@@ -27,6 +27,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "math.h"
 //=======================================
 //=======================================
 #define EndReceiv_UART2_DMA1_FromPC               (DMA1->LISR & DMA_HISR_TCIF5)
@@ -638,18 +639,29 @@ DMA INTERRUPT HANDLER AT DATA RECEIVE UART
 фУНКЦИЯ ВЫЧИСЛЕНИЯ КООРДИНАТ ОПТИЧЕСКОГО ПЯТНА
 OPTICAL SPOT COORDINATE CALCULATION FUNCTION 
 */
-void opticalSpotSearch(parametersOpticalSpot* nameStructure){
+void opticalSpotSearch(parametersOpticalSpot* nameStructure){                                  
 	   nameStructure->errSerchCoordinate = 0;
 	 for(uint16_t i = nameStructure->saveCenterOfTheOpticalSpot_x - nameStructure->rangeReport_Right_Left; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
 			if(mas_DATA[i] <= nameStructure->amplitude){
+				if(abs(mas_DATA[i-1]-nameStructure->amplitude)> abs(mas_DATA[i]-nameStructure->amplitude)){
 			nameStructure->coordinate_x1 =i;
 			nameStructure->errSerchCoordinate = 1;
+				}
+					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){
+			nameStructure->coordinate_x1 =i-1;
+			nameStructure->errSerchCoordinate = 1;
+				}
 			break;
 			}
 	 }
 	 for(uint16_t i = nameStructure->coordinate_x1+10; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
 			if(mas_DATA[i] >= nameStructure->amplitude){
-			 nameStructure->coordinate_x2 = i;
+					if(abs(mas_DATA[i-1]-nameStructure->amplitude)> abs(mas_DATA[i]-nameStructure->amplitude)){
+			nameStructure->coordinate_x2 =i;
+				}
+					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){
+			nameStructure->coordinate_x2 =i-1;
+				}
 				break;
 			}
 	 }
