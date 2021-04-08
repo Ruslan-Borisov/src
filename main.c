@@ -27,45 +27,67 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "math.h"
 //=======================================
 //=======================================
 #define EndReceiv_UART2_DMA1_FromPC               (DMA1->LISR & DMA_HISR_TCIF5)
 #define EndReceiv_UART3_DMA1_FromfMicrometer      (DMA1->LISR & DMA_LISR_TCIF1)
 #define EndReceiv_UART4_DMA1_FromPresuareSensor   (DMA1->LISR & DMA_LISR_TCIF2)
 
+/*
+ИМЕННОВАННЫЕ КОНСТАНТЫ ДЛЯ УПРАВЛЕНИЯ НАСОСОМ И ЭЛЕКТРОМАГНИТНЫМ КЛАПАНОМ
+NAMED CONSTANTS FOR PUMP AND SOLENOID VALVE CONTROL
+*/
+#define flagPump                               (GPIOC->IDR |=  GPIO_BSRR_BS10)
 
-#define flagPump                               (GPIOC->IDR |=  GPIO_BSRR_BS10;)
-
-
-#define sizeBufDMA                              4174
-#define SetPupe                                 1
-#define ResetPupe                               2
-#define SetSolenoid                             1
-#define ResetSolenoid                           2
-//================================================
-#define request_X1_X2_X_Xmin_FirstOpticalSpot   1
-#define request_X1_X2_X_Xmin_SecondOpticalSpot  2
-#define request_X1_X2_X_Xmin_ThirdOpticalSpot   3
-#define request_X1_X2_X_Xmin_FourhtOpticalSpot  4
-
-#define request_centroid_FirstOpticalSpot       5
-#define request_centroid_SecondOpticalSpot      6
-#define request_centroid_ThirdOpticalSpot       7
-#define request_centroid_FourhtOpticalSpot      8
-
-#define request_measurementMillimeters_FirstOpticalSpot       9
-#define request_measurementMillimeters_SecondOpticalSpot      10
-#define request_measurementMillimeters_ThirdOpticalSpot       11
-#define request_measurementMillimeters_FourhtOpticalSpot      12
-#define request_measurementMillimeters_OllOpticalSpot         13
-
+#define sizeBufDMA                              4174   // РАЗМЕР БУФЕРА АЦП DMA
+#define SetPupe                                 1      // ВКЛЮЧИТЬ НАСОС
+#define ResetPupe                               2      // ВЫКЛЮЧТЬ НАСОС
+#define SetSolenoid                             1      // ЗАКРЫТЬ ЭЛЕКТРОМАГНИТНЫЙ КЛАПАН
+#define ResetSolenoid                           2      // ОТКРЫТЬ ЭЛЕКТРОМАГНИТНЫЙ КЛАПАН
+/*
+ИМЕНОВАНЫЕ КОНСТАНТЫ ДЛЯ ОТСЛЕЖИВАНИЯ ЗАПРОСА КООРДИНАТ ОПТИЧЕСКОГО ПЯТНА
+NAMED CONSTANTS FOR TRACKING THE REQUEST FOR OPTICAL SPOT COORDINATES
+*/
+#define request_X1_X2_X_Xmin_FirstOpticalSpot   1 // ЗАПРОС ПК НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ПЕРВОГО ОПТИЧЕСКГО ПЯТНА
+#define request_X1_X2_X_Xmin_SecondOpticalSpot  2 // ЗАПРОС ПК НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ВТОРОГО ОПТИЧЕСКГО ПЯТНА
+#define request_X1_X2_X_Xmin_ThirdOpticalSpot   3 // ЗАПРОС ПК НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ТРЕТЬЕГО ОПТИЧЕСКГО ПЯТНА
+#define request_X1_X2_X_Xmin_FourhtOpticalSpot  4 // ЗАПРОС ПК НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ЧЕТВЕРТОГО ОПТИЧЕСКГО ПЯТНА
+/*
+ИМЕНОВАННЫЕ КОНСТАНТЫ ДЛЯ ОТСЛЕЖИВАНИЯ ЗАПРОСА ЦЕНТРОЙДА ОПТИЧЕСКИХ ПЯТНЕ
+NAMED CONSTANTS FOR TRACKING THE OPTICAL SPOT CENTROIDE QUERY
+*/
+#define request_centroid_FirstOpticalSpot       5 // ЦЕНТРОИД ПЕРВОГО ОПТИЧЕСКОГО ПЯТНА
+#define request_centroid_SecondOpticalSpot      6 // ЦЕНТРОИД ВТОРОГО ОПТИЧЕСКОГО ПЯТНА
+#define request_centroid_ThirdOpticalSpot       7 // ЦЕНТРОИД ТРЕТЬЕГО ОПТИЧЕСКОГО ПЯТНА
+#define request_centroid_FourhtOpticalSpot      8 // ЦЕТРОИД ЧЕТВЕРТОГО ОПТИЧЕСКОГО ПЯТНА
+/*
+ИМЕНОВАННЫЕ КОНСТАНТЫ ДЛЯ ОТСЛЕЖИВАНИЕ ЗАПРОСА НА ПЕРЕМЕЩЕНИЕ ОПТИЧЕСКОГО ПЯТНА В МИЛЛИМЕТРАХ
+NAMED CONSTANTS FOR TRACKING A REQUEST TO MOVE AN OPTICAL SPOT IN MILLIMETERS
+*/
+#define request_measurementMillimeters_FirstOpticalSpot       9  // ПЕРВОЕ ОПТИЧЕСКОЕ ПЯТНО
+#define request_measurementMillimeters_SecondOpticalSpot      10 // ВТОРОЕ ОПТИЧЕСКОЕ ПЯТНО
+#define request_measurementMillimeters_ThirdOpticalSpot       11 // ТРЕТЬЕ ОПТИЧЕСКОЕ ПЯТНО
+#define request_measurementMillimeters_FourhtOpticalSpot      12 // ЧЕТВЕРТОЕ ОПТИЧЕСКОЕ ПЯТНО
+#define request_measurementMillimeters_OllOpticalSpot         13 // ВСЕ ОПТИЧЕСКИЕ ПЯТНА
+/*
+NAMED CONSTANTS FOR TRACKING A REQUEST TO MOVE AN OPTICAL SPOT IN MILLIMETERS
+NAMED CONSTANTS FOR TRACKING A REQUEST TO DETERMINE THE CURRENT PRESSURE
+*/
 #define request_pressure                                      14
-//================================================
+/*
+ИМЕННОВАНИЕ КОНСТАНТЫ ДЛЯ ЗАДАНИЯ РАЗМЕРРА МАССИВОВ
+NAMING A CONSTANT FOR SPECIFYING THE SIZE OF AN ARRAY
+*/
 #define sizeCharCoord                                         18
 #define sizeCharCentroid                                      15
 #define sizeCharPresuare                                       4
-#define sizeCharPresuareForUART                               23
+#define sizeCharPresuareForUART                               23 // РАЗМЕР МАССИВА CHAR ДЛЯ ПЕРЕДАЧИ ПО UART(ДАВЛЕНИЕ ОТ ПЬЕЗОЭЛЕКТРИЧЕСКОГО, РАЧЕТНОГО ДАВЛЕНИЙ И ПРОГОБА В ММ)
 //================================================
+/*
+ИМЕННОВАНИЕ КОНСТАНТЫ ДЛЯ ЗАДАНИЯ ДЛИНЫ ОТРЕЗОКОВ ДЛЯ ФУНКЦИЙ ИНТЕРПОЛЯЦИИ
+NAMING A CONSTANT FOR SETTING THE LENGTH OF SEGMENTS FOR INTERPOLATION FUNCTIONS
+*/
 #define endFirstSegment                                       810
 #define endSecondSegment                                      1230
 //================================================
@@ -394,74 +416,107 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		
+		/*
+		ОТСТАНОВИТЬ НАСОС ЕСЛИ ДАВЛЕНИЕ БОЛЬШЕ 107500
+		RESET THE PUMP IF THE PRESSURE IS GREATER THAN 107500
+		*/
 		if(charPresuare.floatPresuare >107500){
 		GPIOC->BSRR |=  GPIO_BSRR_BR7; 
 		activationPump = 0;
 		}
+		/*
+		ЕЕСЛИ ДАВЛЕНИЕ МЕНЬШЕ 107500 УПРАВЛЕНИЕ ПО КОМАНДЕ ОТ ПК
+		IF THE PRESSURE IS LESS THAN 107500 CONTROL BY COMMAND FROM THE PC
+		*/
 		else if(charPresuare.floatPresuare <107500){
 		// pump
 			if(activationPump == SetPupe){ GPIOC->BSRR |=  GPIO_BSRR_BS7;  activationPump = 0;}
 			if(activationPump == ResetPupe){GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump = 0;}
-	}
-		// SetSolenoid 
+	   }
+		/*
+	  УПРАВЛЕНИЕ ЭЛЕКТРОМАГНИТНЫМ КЛАПАНОМ ПО КОМАНДЕ ОТ ПК
+		CONTROL OF THE SOLENOID VALVE BY COMMAND FROM A PC
+  	*/
 		if(activatingSolenoidValve == SetSolenoid){GPIOC->BSRR |=  GPIO_BSRR_BS8; activatingSolenoidValve =0;}
 		if(activatingSolenoidValve == ResetSolenoid){GPIOC->BSRR |=  GPIO_BSRR_BR8; activatingSolenoidValve =0;}
 		
+		/*
+		ЕСЛИ ЛИНЕЙКА ФОТОЭЛЕКТРОННЫХ ПРИЕМНИКОВ ОПРОШЕНА
+		IF THE LINE OF PHOTOELECTRONIC RECEIVERS IS POLLED
+		*/
 		if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==1){
-			//  GPIOC->BSRR |=  GPIO_BSRR_BR12;	
-		  
-			// Поиск координат
+		/*
+			ПРИШЕЛ ЗАПРОС НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ОПТИЧЕСКОГО ПЯТНА
+			I RECEIVED A REQUEST TO DETERMINE THE COORDINATES OF THE OPTICAL SPOT
+		*/
+			// ПЕРВОЕ ОПТИЧЕСКОЕ ПЯТНО(FIRST OPTICAL SPOT)
 			if(dataRequestForPC == request_X1_X2_X_Xmin_FirstOpticalSpot){
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
 				convertToCharAndPassUart_coordinate(&parametersFirstOpticalSpot);		
 			}
+			//ВТОРОЕ ОПТИЧЕСКОЕ ПЯТНО(SECOND OPTICAL SPOT)			
 			if(dataRequestForPC == request_X1_X2_X_Xmin_SecondOpticalSpot){
 				opticalSpotSearch(&parametersSecondOpticalSpot);
 				convertToCharAndPassUart_coordinate(&parametersSecondOpticalSpot);		
 			}
+			// ТРЕТЬЕ ОПТИЧЕСКОЕ ПЯТНО(THIRD OPTICAL SPOT)
 			if(dataRequestForPC == request_X1_X2_X_Xmin_ThirdOpticalSpot){
 				opticalSpotSearch(&parametersThirdOpticalSpot);
 				convertToCharAndPassUart_coordinate(&parametersThirdOpticalSpot);		
 			}
+			// ЧЕТВЕРТОЕ ОПТИЧЕСКОЕ ПЯТНО(THE FOURTH OPTICAL SPOT) 
 			if(dataRequestForPC == request_X1_X2_X_Xmin_FourhtOpticalSpot){
 				 opticalSpotSearch(&parametersFourhtOpticalSpot);
 				convertToCharAndPassUart_coordinate(&parametersFourhtOpticalSpot);					
 			}
-			// поиск центройда
+			/*
+			ПРИШЕЛ ЗАПРОС НА ОПРЕДЕЛЕНИЕ ЦЕНТРОЙДА ОПТИЧЕСКОГО ПЯТНА
+			I RECEIVED A REQUEST TO DETERMINE THE CENTROID OF THE OPTICAL SPOT
+			*/
 			
+				// ПЕРВОЕ ОПТИЧЕСКОЕ ПЯТНО(FIRST OPTICAL SPOT)
 			if(dataRequestForPC == request_centroid_FirstOpticalSpot ){ 
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersFirstOpticalSpot);				
 			}
-				if(dataRequestForPC == request_centroid_SecondOpticalSpot ){ 
+				//ВТОРОЕ ОПТИЧЕСКОЕ ПЯТНО(SECOND OPTICAL SPOT)	
+			if(dataRequestForPC == request_centroid_SecondOpticalSpot ){ 
 				opticalSpotSearch(&parametersSecondOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersSecondOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersSecondOpticalSpot);				
 			}
-					if(dataRequestForPC == request_centroid_ThirdOpticalSpot ){ 
+				// ТРЕТЬЕ ОПТИЧЕСКОЕ ПЯТНО(THIRD OPTICAL SPOT)
+			if(dataRequestForPC == request_centroid_ThirdOpticalSpot ){ 
 				opticalSpotSearch(&parametersThirdOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersThirdOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersThirdOpticalSpot);				
 			}
-						if(dataRequestForPC == request_centroid_FourhtOpticalSpot ){ 
+					// ЧЕТВЕРТОЕ ОПТИЧЕСКОЕ ПЯТНО(THE FOURTH OPTICAL SPOT) 
+			if(dataRequestForPC == request_centroid_FourhtOpticalSpot ){ 
 				opticalSpotSearch(&parametersFourhtOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersFourhtOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersFourhtOpticalSpot);				
 			}
-						
+			/*
+			ПРИШЕЛ ЗАПРОС НА УСТАНОВКУ НОВОЙ ТОЧКИ ОТСЧЕТА
+			I RECEIVED A REQUEST TO SET A NEW REFERENCE POINT
+			*/		
 			if(parametersFirstOpticalSpot.resetPointOfTheReportToMeasure==resetPointFirstFirstOpticalSpot){
-			pointReportToMeasure(&parametersFirstOpticalSpot);
+				pointReportToMeasure(&parametersFirstOpticalSpot);
 			}
-						
+			/*
+			ПРИШЕЛ ЗАПРОС НА ПОЛУЧЕНИЕ ТЕКУЩЕГО ЗНАЧЕНИЯ ДАВЛЕНИЯ(ОТ ПЬЕЗО ДАТЧИКА И РАСЧЕТНОГО ЗНАЧЕНИЯ ) И ПРОГИБА В ММ ОТ МИКРОМЕТРА
+			I RECEIVED A REQUEST TO GET THE CURRENT PRESSURE VALUE(FROM THE PIEZO SENSOR AND THE CALCULATED VALUE ) AND THE DEFLECTION IN MM FROM THE MICROMETER
+			*/		
 			
-						if(dataRequestForPC==request_pressure){
-						opticalSpotSearch(&parametersFirstOpticalSpot); 
-						calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);				
-					  pressureCalculation(&parametersFirstOpticalSpot);
-						convertToCharAndPassUart_Presuare(&ToStructuresForParser, &parametersFirstOpticalSpot);
-						}
+			if(dataRequestForPC==request_pressure){
+				opticalSpotSearch(&parametersFirstOpticalSpot); 
+				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);
+        calculationOfDeflectionMillimeters (&parametersFirstOpticalSpot);		
+				pressureCalculation(&parametersFirstOpticalSpot);
+				convertToCharAndPassUart_Presuare(&ToStructuresForParser, &parametersFirstOpticalSpot);
+			}
 
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
 		}
@@ -584,18 +639,29 @@ DMA INTERRUPT HANDLER AT DATA RECEIVE UART
 фУНКЦИЯ ВЫЧИСЛЕНИЯ КООРДИНАТ ОПТИЧЕСКОГО ПЯТНА
 OPTICAL SPOT COORDINATE CALCULATION FUNCTION 
 */
-void opticalSpotSearch(parametersOpticalSpot* nameStructure){
+void opticalSpotSearch(parametersOpticalSpot* nameStructure){                                  
 	   nameStructure->errSerchCoordinate = 0;
 	 for(uint16_t i = nameStructure->saveCenterOfTheOpticalSpot_x - nameStructure->rangeReport_Right_Left; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
 			if(mas_DATA[i] <= nameStructure->amplitude){
+				if(abs(mas_DATA[i-1]-nameStructure->amplitude)> abs(mas_DATA[i]-nameStructure->amplitude)){
 			nameStructure->coordinate_x1 =i;
 			nameStructure->errSerchCoordinate = 1;
+				}
+					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){
+			nameStructure->coordinate_x1 =i-1;
+			nameStructure->errSerchCoordinate = 1;
+				}
 			break;
 			}
 	 }
 	 for(uint16_t i = nameStructure->coordinate_x1+10; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
 			if(mas_DATA[i] >= nameStructure->amplitude){
-			 nameStructure->coordinate_x2 = i;
+					if(abs(mas_DATA[i-1]-nameStructure->amplitude)> abs(mas_DATA[i]-nameStructure->amplitude)){
+			nameStructure->coordinate_x2 =i;
+				}
+					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){
+			nameStructure->coordinate_x2 =i-1;
+				}
 				break;
 			}
 	 }
@@ -647,7 +713,7 @@ void calculationOfDeflectionMillimeters (parametersOpticalSpot* nameStructure){
 void initVariablesFirstOpticalSpot(){
 	parametersFirstOpticalSpot.id_OpticalSpot = 'A';
 	parametersFirstOpticalSpot.saveCenterOfTheOpticalSpot_x = 394; 
-	parametersFirstOpticalSpot.amplitude = 2900;
+	parametersFirstOpticalSpot.amplitude = 2900                                                                                                 ;
 	parametersFirstOpticalSpot.centroid= 0;
 	parametersFirstOpticalSpot.measurementMillimeters = 0;
 	parametersFirstOpticalSpot.localMinimum = 0;
@@ -777,7 +843,9 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 		nemeStructure->FourhtOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);	
 	  break;
 		case 'I':
-		(*nemeStructure).FirstOpticalSpotStructures->amplitude = (rx_input-1000);
+			if((rx_input-1000)<3200){
+		nemeStructure->FirstOpticalSpotStructures->amplitude = (rx_input-1000);
+			}	
 	  break;
 		case 'J':
 		nemeStructure->SecondOpticalSpotStructures->amplitude = (rx_input-1000);
