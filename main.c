@@ -713,7 +713,7 @@ void calculationOfDeflectionMillimeters (parametersOpticalSpot* nameStructure){
 void initVariablesFirstOpticalSpot(){
 	parametersFirstOpticalSpot.id_OpticalSpot = 'A';
 	parametersFirstOpticalSpot.saveCenterOfTheOpticalSpot_x = 394; 
-	parametersFirstOpticalSpot.amplitude = 2900;
+	parametersFirstOpticalSpot.amplitude = 2900                                                                                                 ;
 	parametersFirstOpticalSpot.centroid= 0;
 	parametersFirstOpticalSpot.measurementMillimeters = 0;
 	parametersFirstOpticalSpot.localMinimum = 0;
@@ -843,7 +843,9 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 		nemeStructure->FourhtOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);	
 	  break;
 		case 'I':
-		(*nemeStructure).FirstOpticalSpotStructures->amplitude = (rx_input-1000);
+			if((rx_input-1000)<3200){
+		nemeStructure->FirstOpticalSpotStructures->amplitude = (rx_input-1000);
+			}	
 	  break;
 		case 'J':
 		nemeStructure->SecondOpticalSpotStructures->amplitude = (rx_input-1000);
