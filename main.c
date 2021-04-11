@@ -111,27 +111,26 @@ NAMING A CONSTANT FOR SETTING THE LENGTH OF SEGMENTS FOR INTERPOLATION FUNCTIONS
 Parameters of the optical spot
 */ 
 typedef struct {
-	  char  id_OpticalSpot; // �?НДЕНТЕФ�?КАТОР ОПТ�?ЧЕСКОГО ПЯТНА (OPTICAL SPOT IDENTIFIER )
- 	  uint16_t coordinate_x1; // НАЧАЛО ОПТ�?ЧЕСКОГО ПЯТНА (START OF OPTICAL SPOT )
-	  uint16_t coordinate_x2; // КОНЕЦ ОПТ�?ЧЕСКОГО ПЯТНА (END OF OPTICAL SPOT )
-	  uint16_t centerOfTheOpticalSpot_x; // ЦЕНТР ОПТ�?ЧЕСКОГО ПЯТНА (OPTICAL SPOT CENTER )
-	  uint16_t localMinimum; // ЛОКАЛЬНЫЙ М�?Н�?МУМ ОПТ�?ЧЕСКОГО ПЯТНА (LOCAL MINIMUM OF OPTICAL SPOT )
-	  uint16_t startOfSearch; // КООРД�?НАТА ДЛЯ НАЧАЛА ПО�?СКА ОПТ�?ЧЕСКОГО ПЯТНА (COORDINATE TO START OPTICAL SPOT SEARCH)
-	  double centroid; // ЦЕНТРО�?Д ОПТ�?ЧЕСКОГО ПЯТНА (OPTICAL SPOT CENTROID)
-	  uint16_t amplitude; // ЗАДАННОЕ ЗНАЧЕН�?Е АМПЛ�?ТУДЫ ДЛЯ ПО�?СКА ОПТ�?ЧЕСКОГО ПЯТНА(SET AMPLITUDE VALUE FOR OPTICAL SPOT SEARCH )
-	  uint16_t reportPixelsToTheLeft;//ОТСТУП ОТ ЦЕНТРА ВЛЕВО ДЛЯ ФОРМ�?РОВАН�?Я ЦЕНТРО�?ДА ОПТ�?ЧЕСКОГО ПЯТНА(LEFT CENTER LEFT FOR THE FORMATION OF THE CENTROID OF THE OPTICAL SPOT) 
-	  uint16_t reportPixelsToTheRigh; // ОТСТУП ОТ ЦЕНТРА ВПРАВО ДЛЯ ФОРМ�?РОВАН�?Я ЦЕНТРО�?ДА ОПТ�?ЧЕСКОГО ПЯТНА (RETURNING FROM THE CENTER TO THE RIGHT FOR THE FORMATION OF THE CENTROID OF THE OPTICAL SPOT )
-	  uint8_t resetPointOfTheReportToMeasure:1;// ФЛАГ СБРОСА НАЧАЛА ОТЧЕТА ДЛЯ �?ЗМЕРЕН�?Й (RESET FLAG START MEASUREMENT REPORT )
-	  uint8_t errSerchCoordinate;// оОШ�?БКА ПО�?СКА ОПТ�?ЧЕСКОГО ПЯТНА(OPTICAL SPOT SEARCH ERROR )
-	  uint8_t rangeReport_Right_Left; // Д�?АПАЗОН ПО�?СКА ОПТ�?ЧЕСКОГО ПЯТНА(OPTICAL SPOT SEARCH RANGE )
-	  uint16_t saveCenterOfTheOpticalSpot_x;// СОХРАНЕННОЕ ЗНАЧЕН�?Е ЦЕНТРО�?ДА ОПТ�?ЧЕСКОГО ПЯТНА(STORED OPTICAL SPOT CENTROID VALUE )
-  	double pointOfTheReportToMeasure; // ЗНАЧЕН�?Е ЦЕНТРО�?ДА ОТ КОТОРОЙ ВЕДЕТСЯ ОТСЧЕТ(НОЛЬ)(CENTROID VALUE COUNTED FROM (ZERO) )
-	  double measurementMillimeters; // �?ЗМЕРЕННОЕ ЗНАЧЕН�?Е В М�?ЛЛ�?МЕТРАХ(MEASURED VALUE IN MILLIMETERS )
-	  int measurementPresuare; // �?ЗМЕРЕННОЕ ЗНАЧЕН�?Е В ПАСКАЛЯХ(MEASURED VALUE IN PASCALS )
+	  char  id_OpticalSpot; // OPTICAL SPOT IDENTIFIER 
+ 	  uint16_t coordinate_x1; // START OF OPTICAL SPOT 
+	  uint16_t coordinate_x2; // END OF OPTICAL SPOT 
+	  uint16_t centerOfTheOpticalSpot_x; // OPTICAL SPOT CENTER 
+	  uint16_t localMinimum; // LOCAL MINIMUM OF OPTICAL SPOT 
+	  uint16_t startOfSearch; // COORDINATE TO START OPTICAL SPOT SEARCH
+	  double centroid; // OPTICAL SPOT CENTROID
+	  uint16_t amplitude; // SET AMPLITUDE VALUE FOR OPTICAL SPOT SEARCH 
+	  uint16_t reportPixelsToTheLeft;//LEFT CENTER LEFT FOR THE FORMATION OF THE CENTROID OF THE OPTICAL SPOT
+	  uint16_t reportPixelsToTheRigh; // RETURNING FROM THE CENTER TO THE RIGHT FOR THE FORMATION OF THE CENTROID OF THE OPTICAL SPOT 
+	  uint8_t resetPointOfTheReportToMeasure:1;// RESET FLAG START MEASUREMENT REPORT 
+	  uint8_t errSerchCoordinate;// OPTICAL SPOT SEARCH ERROR 
+	  uint8_t rangeReport_Right_Left; // OPTICAL SPOT SEARCH RANGE 
+	  uint16_t saveCenterOfTheOpticalSpot_x;// STORED OPTICAL SPOT CENTROID VALUE 
+  	double pointOfTheReportToMeasure; // CENTROID VALUE COUNTED FROM (ZERO) 
+	  double measurementMillimeters; // MEASURED VALUE IN MILLIMETERS 
+	  int measurementPresuare; // MEASURED VALUE IN PASCALS 
 }parametersOpticalSpot;
 
 /* 
-UNION ДЛЯ КОНВЕРТАЦ�?�? ДАВЛЕН�?Я ПР�?НЯТОГО ЧЕРЕЗ UART
 UNION FOR CONVERSION OF PRESSURE RECEIVED THROUGH UART 
 Parameters Of The Pneumatic System
 */
@@ -142,12 +141,11 @@ Parameters Of The Pneumatic System
 	 } unioncharPresuareStructures ;
 
 /*
-ДАВЛЕН�?Е �?ЗМЕРЕННОЕ ПЬЕЗОЭЛЕКТР�?ЧЕСК�?М ДАТЧ�?КОМ �? ЗАДАННОЕ ЗНАЧЕН�?Е
 PRESSURE MEASURED BY PIEZOELECTRIC SENSOR AND SET POINT
 */
 typedef struct {
-		float PressureFromPiezoelectricSensor; // ДАВЛЕН�?Е С ПЬЕЗОЭЛЕКТР�?ЧЕСКОГО ДАТЧ�?КА ДАВЛЕН�?Й(PRESSURE FROM PIEZOELECTRIC PRESSURE SENSOR )
-	  double setPressure; // ЗАДАННОЕ ЗНАЧЕН�?Е ДАВЛЕН�?Я ПР�?НЯТОЕ ЧЕРЕЗ UART(PRESET VALUE ACCEPTED VIA UART )
+		float PressureFromPiezoelectricSensor; // PRESSURE FROM PIEZOELECTRIC PRESSURE SENSOR 
+	  double setPressure; // PRESET VALUE ACCEPTED VIA UART 
 }parametersOfThePneumaticSystem;
 
 /*
@@ -417,7 +415,6 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
   while (1)
   {
 		/*
-		ОТСТАНОВИТЬ НАСОС ЕСЛИ ДАВЛЕНИЕ БОЛЬШЕ 107500
 		RESET THE PUMP IF THE PRESSURE IS GREATER THAN 107500
 		*/
 		if(charPresuare.floatPresuare >107500){
@@ -425,7 +422,6 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 		activationPump = 0;
 		}
 		/*
-		ЕЕСЛИ ДАВЛЕНИЕ МЕНЬШЕ 107500 УПРАВЛЕНИЕ ПО КОМАНДЕ ОТ ПК
 		IF THE PRESSURE IS LESS THAN 107500 CONTROL BY COMMAND FROM THE PC
 		*/
 		else if(charPresuare.floatPresuare <107500){
@@ -434,79 +430,72 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 			if(activationPump == ResetPupe){GPIOC->BSRR |=  GPIO_BSRR_BR7; activationPump = 0;}
 	   }
 		/*
-	  УПРАВЛЕНИЕ ЭЛЕКТРОМАГНИТНЫМ КЛАПАНОМ ПО КОМАНДЕ ОТ ПК
 		CONTROL OF THE SOLENOID VALVE BY COMMAND FROM A PC
   	*/
 		if(activatingSolenoidValve == SetSolenoid){GPIOC->BSRR |=  GPIO_BSRR_BS8; activatingSolenoidValve =0;}
 		if(activatingSolenoidValve == ResetSolenoid){GPIOC->BSRR |=  GPIO_BSRR_BR8; activatingSolenoidValve =0;}
 		
 		/*
-		ЕСЛИ ЛИНЕЙКА ФОТОЭЛЕКТРОННЫХ ПРИЕМНИКОВ ОПРОШЕНА
 		IF THE LINE OF PHOTOELECTRONIC RECEIVERS IS POLLED
 		*/
 		if (flagsEndOfTheCCDLineSurvey_ADC1_DMA2==1){
 		/*
-			ПРИШЕЛ ЗАПРОС НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ОПТИЧЕСКОГО ПЯТНА
 			I RECEIVED A REQUEST TO DETERMINE THE COORDINATES OF THE OPTICAL SPOT
 		*/
-			// ПЕРВОЕ ОПТИЧЕСКОЕ ПЯТНО(FIRST OPTICAL SPOT)
+			// FIRST OPTICAL SPOT
 			if(dataRequestForPC == request_X1_X2_X_Xmin_FirstOpticalSpot){
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
 				convertToCharAndPassUart_coordinate(&parametersFirstOpticalSpot);		
 			}
-			//ВТОРОЕ ОПТИЧЕСКОЕ ПЯТНО(SECOND OPTICAL SPOT)			
+			//SECOND OPTICAL SPOT			
 			if(dataRequestForPC == request_X1_X2_X_Xmin_SecondOpticalSpot){
 				opticalSpotSearch(&parametersSecondOpticalSpot);
 				convertToCharAndPassUart_coordinate(&parametersSecondOpticalSpot);		
 			}
-			// ТРЕТЬЕ ОПТИЧЕСКОЕ ПЯТНО(THIRD OPTICAL SPOT)
+			// THIRD OPTICAL SPOT
 			if(dataRequestForPC == request_X1_X2_X_Xmin_ThirdOpticalSpot){
 				opticalSpotSearch(&parametersThirdOpticalSpot);
 				convertToCharAndPassUart_coordinate(&parametersThirdOpticalSpot);		
 			}
-			// ЧЕТВЕРТОЕ ОПТИЧЕСКОЕ ПЯТНО(THE FOURTH OPTICAL SPOT) 
+			// THE FOURTH OPTICAL SPOT
 			if(dataRequestForPC == request_X1_X2_X_Xmin_FourhtOpticalSpot){
 				 opticalSpotSearch(&parametersFourhtOpticalSpot);
 				convertToCharAndPassUart_coordinate(&parametersFourhtOpticalSpot);					
 			}
 			/*
-			ПРИШЕЛ ЗАПРОС НА ОПРЕДЕЛЕНИЕ ЦЕНТРОЙДА ОПТИЧЕСКОГО ПЯТНА
 			I RECEIVED A REQUEST TO DETERMINE THE CENTROID OF THE OPTICAL SPOT
 			*/
-			
-				// ПЕРВОЕ ОПТИЧЕСКОЕ ПЯТНО(FIRST OPTICAL SPOT)
+				// FIRST OPTICAL SPOT
 			if(dataRequestForPC == request_centroid_FirstOpticalSpot ){ 
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersFirstOpticalSpot);				
 			}
-				//ВТОРОЕ ОПТИЧЕСКОЕ ПЯТНО(SECOND OPTICAL SPOT)	
+				//SECOND OPTICAL SPOT	
 			if(dataRequestForPC == request_centroid_SecondOpticalSpot ){ 
 				opticalSpotSearch(&parametersSecondOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersSecondOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersSecondOpticalSpot);				
 			}
-				// ТРЕТЬЕ ОПТИЧЕСКОЕ ПЯТНО(THIRD OPTICAL SPOT)
+				// THIRD OPTICAL SPOT
 			if(dataRequestForPC == request_centroid_ThirdOpticalSpot ){ 
 				opticalSpotSearch(&parametersThirdOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersThirdOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersThirdOpticalSpot);				
 			}
-					// ЧЕТВЕРТОЕ ОПТИЧЕСКОЕ ПЯТНО(THE FOURTH OPTICAL SPOT) 
+					// THE FOURTH OPTICAL SPOT
 			if(dataRequestForPC == request_centroid_FourhtOpticalSpot ){ 
 				opticalSpotSearch(&parametersFourhtOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersFourhtOpticalSpot);	
         convertToCharAndPassUart_centroid(&parametersFourhtOpticalSpot);				
 			}
 			/*
-			ПРИШЕЛ ЗАПРОС НА УСТАНОВКУ НОВОЙ ТОЧКИ ОТСЧЕТА
 			I RECEIVED A REQUEST TO SET A NEW REFERENCE POINT
 			*/		
 			if(parametersFirstOpticalSpot.resetPointOfTheReportToMeasure==resetPointFirstFirstOpticalSpot){
 				pointReportToMeasure(&parametersFirstOpticalSpot);
 			}
 			/*
-			ПРИШЕЛ ЗАПРОС НА ПОЛУЧЕНИЕ ТЕКУЩЕГО ЗНАЧЕНИЯ ДАВЛЕНИЯ(ОТ ПЬЕЗО ДАТЧИКА И РАСЧЕТНОГО ЗНАЧЕНИЯ ) И ПРОГИБА В ММ ОТ МИКРОМЕТРА
 			I RECEIVED A REQUEST TO GET THE CURRENT PRESSURE VALUE(FROM THE PIEZO SENSOR AND THE CALCULATED VALUE ) AND THE DEFLECTION IN MM FROM THE MICROMETER
 			*/		
 			
@@ -576,7 +565,6 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 
 /* 
-ОБРАБОТЧ�?К ПРЕРЫВАН�?Я DMA (АЦП) ПО ЗАПОЛНЕН�?Ю БУФЕРА
 DMA INTERRUPT HANDLE ON BUFFER FULL
 */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
@@ -616,7 +604,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 
 	
 	/*
-ОБРАБОТЧ�?К ПРЕРЫВАН�?Я DMA ОКНЧАН�?Ю ПР�?ЕМА ДАННЫХ UART
 DMA INTERRUPT HANDLER AT DATA RECEIVE UART
 	*/
 	void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart){
@@ -636,7 +623,6 @@ DMA INTERRUPT HANDLER AT DATA RECEIVE UART
 
 
 /* 
-фУНКЦ�?Я ВЫЧ�?СЛЕН�?Я КООРД�?НАТ ОПТ�?ЧЕСКОГО ПЯТНА
 OPTICAL SPOT COORDINATE CALCULATION FUNCTION 
 */
 void opticalSpotSearch(parametersOpticalSpot* nameStructure){                                  
@@ -678,7 +664,6 @@ void opticalSpotSearch(parametersOpticalSpot* nameStructure){
 	 
 }
 /* 
-фУНКЦ�?Я ВЫЧ�?СЛЕН�?Я ЦЕНТРОЙДА ОПТ�?ЧЕСКОГО ПЯТНА
     OPTICAL SPOT CENTROID CALCULATION FUNCTION  
 */		
 void calculationOpticalSpotCentroid(parametersOpticalSpot* nameStructure){
@@ -693,31 +678,29 @@ void calculationOpticalSpotCentroid(parametersOpticalSpot* nameStructure){
 	 nameStructure->centroid = summaAplituda_Pixse_x/summaAmplitud_x;
 }
 /* 
-ФУНКЦ�?Я УСТАНОВК�? ТОЧК�? ОТСЧЕТА
+
 REFERENCE POINT FUNCTION 
 */		
 void pointReportToMeasure(parametersOpticalSpot* nameStructure){
 		nameStructure->pointOfTheReportToMeasure = nameStructure->centroid;
 }
 /* 
-ФУНКЦ�?Я РАСЧЕТА ПРОГ�?БА МЕМБРАНЫ В М�?ЛЛ�?МЕТРАХ
 FUNCTION FOR CALCULATING THE DEFLECTION OF THE MEMBRANE IN MILLIMETERS 
 */
 void calculationOfDeflectionMillimeters (parametersOpticalSpot* nameStructure){
 	 nameStructure->measurementMillimeters = (nameStructure->centroid  - nameStructure->pointOfTheReportToMeasure)*0.007;
 }
 /*
-	�?Н�?Ц�?АЛ�?ЗАЦ�?Я ПЕРЕМЕННЫХ ПЕРВОГО ОПТ�?ЧЕСКОГО ПЯТНА
 	INITIALIZING FIRST OPTICAL SPOT VARIABLES 
 	*/
 void initVariablesFirstOpticalSpot(){
 	parametersFirstOpticalSpot.id_OpticalSpot = 'A';
-	parametersFirstOpticalSpot.saveCenterOfTheOpticalSpot_x = 394; 
-	parametersFirstOpticalSpot.amplitude = 2900                                                                                                 ;
+	parametersFirstOpticalSpot.saveCenterOfTheOpticalSpot_x = 180; //394
+	parametersFirstOpticalSpot.amplitude = 2900;                                                                                               ;
 	parametersFirstOpticalSpot.centroid= 0;
 	parametersFirstOpticalSpot.measurementMillimeters = 0;
 	parametersFirstOpticalSpot.localMinimum = 0;
-	parametersFirstOpticalSpot.rangeReport_Right_Left = 40; 
+	parametersFirstOpticalSpot.rangeReport_Right_Left = 50; 
 	parametersFirstOpticalSpot.pointOfTheReportToMeasure = 0;
 	parametersFirstOpticalSpot.resetPointOfTheReportToMeasure = 0;
 	parametersFirstOpticalSpot.reportPixelsToTheLeft = 50;
@@ -727,17 +710,16 @@ void initVariablesFirstOpticalSpot(){
 	parametersFirstOpticalSpot.centerOfTheOpticalSpot_x = 0;
 }
 /*
-�?Н�?Ц�?АЛ�?ЗАЦ�?Я ПЕРЕМЕННЫХ ВТОРОГО ОПТ�?ЧЕСКОГО ПЯТНА
 INITIALIZING VARIABLES OF THE SECOND OPTICAL SPOT 
 */
 void initVariablesSecondOpticalSpot(){
 	parametersSecondOpticalSpot.id_OpticalSpot = 'B'; 
-	parametersSecondOpticalSpot.saveCenterOfTheOpticalSpot_x = 1246;
-	parametersSecondOpticalSpot.amplitude = 2900;
+	parametersSecondOpticalSpot.saveCenterOfTheOpticalSpot_x = 1032; //1246;
+	parametersSecondOpticalSpot.amplitude = 2500;
 	parametersSecondOpticalSpot.centroid= 0;
 	parametersSecondOpticalSpot.measurementMillimeters = 0;
 	parametersSecondOpticalSpot.localMinimum = 0;
-	parametersSecondOpticalSpot.rangeReport_Right_Left = 85;
+	parametersSecondOpticalSpot.rangeReport_Right_Left = 100;
 	parametersSecondOpticalSpot.pointOfTheReportToMeasure = 0;
 	parametersSecondOpticalSpot.resetPointOfTheReportToMeasure = 0;
 	parametersSecondOpticalSpot.reportPixelsToTheLeft = 70;
@@ -747,13 +729,12 @@ void initVariablesSecondOpticalSpot(){
 	parametersSecondOpticalSpot.centerOfTheOpticalSpot_x = 0;
 }
 /*
-�?Н�?Ц�?АЛ�?ЗАЦ�?Я ПЕРЕМЕННЫХ ТРЕТЬЕГО ОПТ�?ЧЕСКОГО ПЯТНА
 INITIALIZING THE VARIABLES OF THE THIRD OPTICAL SPOT 
 */
 void initVariablesThirdOpticalSpot(){
 	parametersThirdOpticalSpot.id_OpticalSpot = 'C'; 
-	parametersThirdOpticalSpot.saveCenterOfTheOpticalSpot_x = 2097;
-	parametersThirdOpticalSpot.amplitude = 2900;
+	parametersThirdOpticalSpot.saveCenterOfTheOpticalSpot_x = 1783; //2097;
+	parametersThirdOpticalSpot.amplitude = 2500;
 	parametersThirdOpticalSpot.centroid= 0;
 	parametersThirdOpticalSpot.measurementMillimeters = 0;
 	parametersThirdOpticalSpot.localMinimum = 0;
@@ -767,14 +748,13 @@ void initVariablesThirdOpticalSpot(){
 	parametersThirdOpticalSpot.centerOfTheOpticalSpot_x = 0;
 }
 /*
-�?Н�?Ц�?АЛ�?ЗАЦ�?Я ПЕРЕМЕННЫХ ЧЕТВЕРТОГО ОПТ�?ЧЕСКОГО ПЯТНА
 INITIALIZING VARIABLES OF THE FOURTH OPTICAL SPOT 
 */
 void initVariablesFourhtOpticalSpot(){
 	
 	parametersFourhtOpticalSpot.id_OpticalSpot = 'D'; 
-	parametersFourhtOpticalSpot.saveCenterOfTheOpticalSpot_x = 2951;
-	parametersFourhtOpticalSpot.amplitude = 2900;
+	parametersFourhtOpticalSpot.saveCenterOfTheOpticalSpot_x = 2737; //2951;
+	parametersFourhtOpticalSpot.amplitude = 2500;
 	parametersFourhtOpticalSpot.centroid= 0;
 	parametersFourhtOpticalSpot.measurementMillimeters = 0;
 	parametersFourhtOpticalSpot.localMinimum = 0;
@@ -788,7 +768,6 @@ void initVariablesFourhtOpticalSpot(){
 	parametersFourhtOpticalSpot.centerOfTheOpticalSpot_x = 0;
 }
 /*
-�?Н�?Ц�?АЛ�?ЗАЦ�?Я ПЕРЕМЕННЫХ ПНЕВМАТ�?ЧЕСКОЙ С�?СТЕМЫ
 INITIALIZING PNEUMATIC SYSTEM VARIABLES 
 */
 void initVariablesPneumaticSystem(parametersOfThePneumaticSystem* nemeStract){
@@ -796,7 +775,6 @@ void initVariablesPneumaticSystem(parametersOfThePneumaticSystem* nemeStract){
 	nemeStract->setPressure=0;
 }
 /*
-�?Н�?Ц�?АЛ�?ЗАЦ�?Я ФЛАГОВ
 FLAG INITIALIZATION 
 */
 void initFlags(){
@@ -809,7 +787,6 @@ void initFlags(){
 	 activatingSolenoidValve =0;
 }
 /*
-ОБРАБОТКА ДАННЫХ ПР�?НЯТЫХ ОТ ПК (ПАРС�?НГ)
 PROCESSING OF DATA ACCEPTED FROM PC (PARSING) 
 */
 void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
@@ -843,9 +820,7 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 		nemeStructure->FourhtOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);	
 	  break;
 		case 'I':
-			if((rx_input-1000)<3200){
 		nemeStructure->FirstOpticalSpotStructures->amplitude = (rx_input-1000);
-			}	
 	  break;
 		case 'J':
 		nemeStructure->SecondOpticalSpotStructures->amplitude = (rx_input-1000);
@@ -904,7 +879,6 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 
 }
 /*
-ПРЕОБРАЗОВАН�?Е КООРД�?НАТ ОПТ�?ЧЕСКОГО ПЯТНА В СТРОКУ �? ПЕРЕДАЧА В UART
 CONVERSION OF OPTICAL SPOT COORDINATES TO STRING AND TRANSFER TO UART
 */
 void convertToCharAndPassUart_coordinate(parametersOpticalSpot *nemeStructe){
@@ -920,7 +894,6 @@ void convertToCharAndPassUart_coordinate(parametersOpticalSpot *nemeStructe){
 			  flagEndTransfer_UART2_DMA1_ForPC =1;		
 }
 /*
-ПРЕОБРАЗОВАН�?Е ЦЕНТРА ОПТ�?ЧЕСКОГО ПЯТНА �? ЦЕНТРОЙДА В СТРОКУ �? ПЕРЕДАЧА В UART
 CONVERTING THE CENTER OF THE OPTICAL SPOT AND THE CENTER TO A STRING AND TRANSFER TO THE UART 
 */
 void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe){
@@ -932,7 +905,6 @@ void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe){
 				 flagEndTransfer_UART2_DMA1_ForPC =1;			
 }
 /*
-ПРЕОБРАЗОВАН�?Е ДАВЛЕН�?Й(ОТ ДАТЧ�?КА �? РАСЧЕТНОГО) �? ПРОГ�?БА(ОТ М�?КРОМЕТРА) В СТРОКУ �? ПЕРЕДАЧА В UART
 CONVERSION OF PRESSURE (FROM SENSOR AND DESIGNED) AND DEFLECTION (FROM MICROMETER) INTO A STRING AND TRANSFER TO UART 
 */
 void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe,  parametersOpticalSpot *nemeStructe1){
@@ -945,7 +917,6 @@ void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe
 				 flagEndTransfer_UART2_DMA1_ForPC =1;			
 }
 /*
-КОНВЕРТ�?РОВАН�?Е ДАВЛЕН�?Я С �?СПОЛЬЗОВАН�?ЕМ UNION
 PRESSURE CONVERSION WITH UNION 
 */
 void unionOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unioncharPresuareStructures *structure2 ){
@@ -953,7 +924,6 @@ void unionOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, union
 	}
 
 /*
-СКЛЕЙКА БАЙТОВ ПР�?НЯТЫХ ЧЕРЕЗ UART ОТ М�?КРОМЕТРА
 GLUING BYTE ACCEPTED VIA UART FROM MICROMETER 
 */
 	void filterByteMassMicromrtrs(unionbyteMass *structure){
@@ -962,7 +932,6 @@ GLUING BYTE ACCEPTED VIA UART FROM MICROMETER
 	}
 	
 /*
-РАСЧЕТ ДАВЛЕН�?Я С �?СПОЛЬЗОВАН�?ЕМ ФНКЦ�?�? Л�?НЕЙНОЙ �?НТЕРПОЛЯЦ�?�?	
 PRESSURE CALCULATION USING LINEAR INTERPOLATION FUNCTION 
 	*/
 	void pressureCalculation(parametersOpticalSpot* nemeStructure){
