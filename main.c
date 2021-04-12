@@ -35,57 +35,58 @@
 #define EndReceiv_UART4_DMA1_FromPresuareSensor   (DMA1->LISR & DMA_LISR_TCIF2)
 
 /*
-ИМЕННОВАННЫЕ КОНСТАНТЫ ДЛЯ УПРАВЛЕНИЯ НАСОСОМ И ЭЛЕКТРОМАГНИТНЫМ КЛАПАНОМ
+
 NAMED CONSTANTS FOR PUMP AND SOLENOID VALVE CONTROL
 */
 #define flagPump                               (GPIOC->IDR |=  GPIO_BSRR_BS10)
 
-#define sizeBufDMA                              4174   // РАЗМЕР БУФЕРА АЦП DMA
-#define SetPupe                                 1      // ВКЛЮЧИТЬ НАСОС
-#define ResetPupe                               2      // ВЫКЛЮЧТЬ НАСОС
-#define SetSolenoid                             1      // ЗАКРЫТЬ ЭЛЕКТРОМАГНИТНЫЙ КЛАПАН
-#define ResetSolenoid                           2      // ОТКРЫТЬ ЭЛЕКТРОМАГНИТНЫЙ КЛАПАН
+#define sizeBufDMA                              4174   // 
+#define SetPupe                                 1      // 
+#define ResetPupe                               2      // 
+#define SetSolenoid                             1      // 
+#define ResetSolenoid                           2      // 
 /*
-ИМЕНОВАНЫЕ КОНСТАНТЫ ДЛЯ ОТСЛЕЖИВАНИЯ ЗАПРОСА КООРДИНАТ ОПТИЧЕСКОГО ПЯТНА
+
 NAMED CONSTANTS FOR TRACKING THE REQUEST FOR OPTICAL SPOT COORDINATES
 */
-#define request_X1_X2_X_Xmin_FirstOpticalSpot   1 // ЗАПРОС ПК НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ПЕРВОГО ОПТИЧЕСКГО ПЯТНА
-#define request_X1_X2_X_Xmin_SecondOpticalSpot  2 // ЗАПРОС ПК НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ВТОРОГО ОПТИЧЕСКГО ПЯТНА
-#define request_X1_X2_X_Xmin_ThirdOpticalSpot   3 // ЗАПРОС ПК НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ТРЕТЬЕГО ОПТИЧЕСКГО ПЯТНА
-#define request_X1_X2_X_Xmin_FourhtOpticalSpot  4 // ЗАПРОС ПК НА ОПРЕДЕЛЕНИЕ КООРДИНАТ ЧЕТВЕРТОГО ОПТИЧЕСКГО ПЯТНА
+#define request_X1_X2_X_Xmin_FirstOpticalSpot   1 // 
+#define request_X1_X2_X_Xmin_SecondOpticalSpot  2 // 
+#define request_X1_X2_X_Xmin_ThirdOpticalSpot   3 // 
+#define request_X1_X2_X_Xmin_FourhtOpticalSpot  4 // 
 /*
-ИМЕНОВАННЫЕ КОНСТАНТЫ ДЛЯ ОТСЛЕЖИВАНИЯ ЗАПРОСА ЦЕНТРОЙДА ОПТИЧЕСКИХ ПЯТНЕ
 NAMED CONSTANTS FOR TRACKING THE OPTICAL SPOT CENTROIDE QUERY
 */
-#define request_centroid_FirstOpticalSpot       5 // ЦЕНТРОИД ПЕРВОГО ОПТИЧЕСКОГО ПЯТНА
-#define request_centroid_SecondOpticalSpot      6 // ЦЕНТРОИД ВТОРОГО ОПТИЧЕСКОГО ПЯТНА
-#define request_centroid_ThirdOpticalSpot       7 // ЦЕНТРОИД ТРЕТЬЕГО ОПТИЧЕСКОГО ПЯТНА
-#define request_centroid_FourhtOpticalSpot      8 // ЦЕТРОИД ЧЕТВЕРТОГО ОПТИЧЕСКОГО ПЯТНА
+#define request_centroid_FirstOpticalSpot       5 // 
+#define request_centroid_SecondOpticalSpot      6 // 
+#define request_centroid_ThirdOpticalSpot       7 // 
+#define request_centroid_FourhtOpticalSpot      8 // �
 /*
-ИМЕНОВАННЫЕ КОНСТАНТЫ ДЛЯ ОТСЛЕЖИВАНИЕ ЗАПРОСА НА ПЕРЕМЕЩЕНИЕ ОПТИЧЕСКОГО ПЯТНА В МИЛЛИМЕТРАХ
+
 NAMED CONSTANTS FOR TRACKING A REQUEST TO MOVE AN OPTICAL SPOT IN MILLIMETERS
 */
-#define request_measurementMillimeters_FirstOpticalSpot       9  // ПЕРВОЕ ОПТИЧЕСКОЕ ПЯТНО
-#define request_measurementMillimeters_SecondOpticalSpot      10 // ВТОРОЕ ОПТИЧЕСКОЕ ПЯТНО
-#define request_measurementMillimeters_ThirdOpticalSpot       11 // ТРЕТЬЕ ОПТИЧЕСКОЕ ПЯТНО
-#define request_measurementMillimeters_FourhtOpticalSpot      12 // ЧЕТВЕРТОЕ ОПТИЧЕСКОЕ ПЯТНО
-#define request_measurementMillimeters_OllOpticalSpot         13 // ВСЕ ОПТИЧЕСКИЕ ПЯТНА
+#define request_measurementMillimeters_FirstOpticalSpot       9  // 
+#define request_measurementMillimeters_SecondOpticalSpot      10 // 
+#define request_measurementMillimeters_ThirdOpticalSpot       11 // 
+#define request_measurementMillimeters_FourhtOpticalSpot      12 // 
+#define request_measurementMillimeters_OllOpticalSpot         13 // 
 /*
 NAMED CONSTANTS FOR TRACKING A REQUEST TO MOVE AN OPTICAL SPOT IN MILLIMETERS
 NAMED CONSTANTS FOR TRACKING A REQUEST TO DETERMINE THE CURRENT PRESSURE
 */
 #define request_pressure                                      14
+#define request_pressureEndCentroid_FirstOpticalSpot          15
 /*
-ИМЕННОВАНИЕ КОНСТАНТЫ ДЛЯ ЗАДАНИЯ РАЗМЕРРА МАССИВОВ
+
 NAMING A CONSTANT FOR SPECIFYING THE SIZE OF AN ARRAY
 */
 #define sizeCharCoord                                         18
 #define sizeCharCentroid                                      15
 #define sizeCharPresuare                                       4
-#define sizeCharPresuareForUART                               23 // РАЗМЕР МАССИВА CHAR ДЛЯ ПЕРЕДАЧИ ПО UART(ДАВЛЕНИЕ ОТ ПЬЕЗОЭЛЕКТРИЧЕСКОГО, РАЧЕТНОГО ДАВЛЕНИЙ И ПРОГОБА В ММ)
+#define sizeCharPresuareForUART                               23 // 
+#define sizeCharMillimeters                                   14
+#define sizeCharPresuareForUART_presuareFndCentroid           15
 //================================================
 /*
-ИМЕННОВАНИЕ КОНСТАНТЫ ДЛЯ ЗАДАНИЯ ДЛИНЫ ОТРЕЗОКОВ ДЛЯ ФУНКЦИЙ ИНТЕРПОЛЯЦИИ
 NAMING A CONSTANT FOR SETTING THE LENGTH OF SEGMENTS FOR INTERPOLATION FUNCTIONS
 */
 #define endFirstSegment                                       810
@@ -100,7 +101,7 @@ NAMING A CONSTANT FOR SETTING THE LENGTH OF SEGMENTS FOR INTERPOLATION FUNCTIONS
 #define coefficient_k3                                        12562400
 #define coefficient_b3                                        104682000
 //=======================================
-#define resetPointFirstFirstOpticalSpot                       1
+#define resetPoint                                             1
 //=======================================
 #include <stdio.h>
 #include <string.h>
@@ -128,6 +129,7 @@ typedef struct {
   	double pointOfTheReportToMeasure; // CENTROID VALUE COUNTED FROM (ZERO) 
 	  double measurementMillimeters; // MEASURED VALUE IN MILLIMETERS 
 	  int measurementPresuare; // MEASURED VALUE IN PASCALS 
+	  double centroidDeviation;
 }parametersOpticalSpot;
 
 /* 
@@ -164,6 +166,9 @@ typedef union {
  char transferPackageForLabVIEW_coordinate[sizeCharCoord]; 
  char transferPackageForLabVIEW_centoide[sizeCharCentroid];
  char transferPackageForLabVIEW_Presuatr[sizeCharPresuareForUART];
+ char transferPackageForLabVIEW_Millimeters[sizeCharMillimeters];
+ char transferPackageForLabVIEW_presuareFndCentroid[sizeCharPresuareForUART_presuareFndCentroid];
+	
 }unionCharForUART;   
 
 typedef union {
@@ -193,7 +198,7 @@ typedef struct {
 		volatile uint8_t flagEndReceiv_UART2_DMA1_FromPC;
 		volatile uint8_t flagEndReceiv_UART3_DMA1_FromfMicrometer;
 		volatile uint8_t dataRequestForPC;
-	           uint8_t activationPump;
+	  volatile   uint8_t activationPump;
 		volatile uint8_t activatingSolenoidValve;
 //=======================================
 //=======================================
@@ -202,8 +207,8 @@ typedef struct {
    short mas_DATA[sizeBufDMA];
    int16_t int16_DatadataMicrometrs;
    int int_DatadataMicrometrs;
+
   
-   
 //=======================================
 //=======================================
  parametersOpticalSpot parametersFirstOpticalSpot; 
@@ -310,6 +315,13 @@ void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe
 void pressureCalculation(parametersOpticalSpot* nemeStructure);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void convertToCharAndPassUart_millimetrs(parametersOpticalSpot *nemeStructe);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void convertToCharAndPassUart_presuareFndCentroid(parametersOpticalSpot *nemeStructe);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -492,8 +504,76 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 			/*
 			I RECEIVED A REQUEST TO SET A NEW REFERENCE POINT
 			*/		
-			if(parametersFirstOpticalSpot.resetPointOfTheReportToMeasure==resetPointFirstFirstOpticalSpot){
-				pointReportToMeasure(&parametersFirstOpticalSpot);
+				// FIRST OPTICAL SPOT
+			if(parametersFirstOpticalSpot.resetPointOfTheReportToMeasure==resetPoint){
+					pointReportToMeasure(&parametersFirstOpticalSpot);
+					parametersFirstOpticalSpot.resetPointOfTheReportToMeasure = 0;
+				}
+			
+			// SECOND OPTICAL SPOT
+				if(parametersSecondOpticalSpot.resetPointOfTheReportToMeasure==resetPoint){
+					pointReportToMeasure(&parametersSecondOpticalSpot);
+					parametersSecondOpticalSpot.resetPointOfTheReportToMeasure = 0;
+				}
+			// FRID OPTICAL SPOT
+				if(parametersThirdOpticalSpot.resetPointOfTheReportToMeasure==resetPoint){
+					pointReportToMeasure(&parametersThirdOpticalSpot);
+					parametersThirdOpticalSpot.resetPointOfTheReportToMeasure = 0;
+				}
+			// THE FOURTH  OPTICAL SPOT
+				if(parametersFourhtOpticalSpot.resetPointOfTheReportToMeasure==resetPoint){
+					pointReportToMeasure(&parametersFourhtOpticalSpot);
+					parametersFourhtOpticalSpot.resetPointOfTheReportToMeasure = 0;
+				}
+			// OLL OPTICAL SPOT
+				if(ToStructuresForParser.resetOllPointOfTheReportToMeasure ==resetPoint){
+					pointReportToMeasure(&parametersFirstOpticalSpot); //  1
+					pointReportToMeasure(&parametersSecondOpticalSpot); // 2
+					pointReportToMeasure(&parametersThirdOpticalSpot); // 3
+					pointReportToMeasure(&parametersFourhtOpticalSpot);//  4
+				  ToStructuresForParser.resetOllPointOfTheReportToMeasure =0;
+				}
+			
+				
+			/*
+			MEASUREMENT IN MILLIMETERS FROM THE OPTICAL RULER AND MICROMETE
+			*/
+			// FIRST OPTICAL SPOT
+			if(dataRequestForPC == request_measurementMillimeters_FirstOpticalSpot ){ 
+				opticalSpotSearch(&parametersFirstOpticalSpot); 
+				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);		
+        calculationOfDeflectionMillimeters(&parametersFirstOpticalSpot);	
+        convertToCharAndPassUart_millimetrs(&parametersFirstOpticalSpot);				
+			}
+				// SECOND OPTICAL SPOT
+			if(dataRequestForPC == request_measurementMillimeters_SecondOpticalSpot ){ 
+				opticalSpotSearch(&parametersSecondOpticalSpot); 
+				calculationOpticalSpotCentroid(&parametersSecondOpticalSpot);		
+        calculationOfDeflectionMillimeters(&parametersSecondOpticalSpot);	
+        convertToCharAndPassUart_millimetrs(&parametersSecondOpticalSpot);				
+			}
+			  // FRID OPTICAL SPOT
+			if(dataRequestForPC == request_measurementMillimeters_ThirdOpticalSpot){ 
+				opticalSpotSearch(&parametersThirdOpticalSpot); 
+				calculationOpticalSpotCentroid(&parametersThirdOpticalSpot);		
+        calculationOfDeflectionMillimeters(&parametersThirdOpticalSpot);	
+        convertToCharAndPassUart_millimetrs(&parametersThirdOpticalSpot);				
+			}
+			 // THE FOURTH  OPTICAL SPOT
+				if(dataRequestForPC == request_measurementMillimeters_FourhtOpticalSpot){ 
+				opticalSpotSearch(&parametersFourhtOpticalSpot); 
+				calculationOpticalSpotCentroid(&parametersFourhtOpticalSpot);		
+        calculationOfDeflectionMillimeters(&parametersFourhtOpticalSpot);	
+        convertToCharAndPassUart_millimetrs(&parametersFourhtOpticalSpot);				
+			}
+			/*
+			REQUEST PRESSURE FROM PIEZO SENSOR AND CENTROID
+			*/
+			// FIRST OPTICAL SPOT
+			if(dataRequestForPC == request_pressureEndCentroid_FirstOpticalSpot){ 
+				opticalSpotSearch(&parametersFirstOpticalSpot); 
+				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);		
+        convertToCharAndPassUart_presuareFndCentroid(&parametersFirstOpticalSpot);				
 			}
 			/*
 			I RECEIVED A REQUEST TO GET THE CURRENT PRESSURE VALUE(FROM THE PIEZO SENSOR AND THE CALCULATED VALUE ) AND THE DEFLECTION IN MM FROM THE MICROMETER
@@ -629,7 +709,7 @@ void opticalSpotSearch(parametersOpticalSpot* nameStructure){
 	   nameStructure->errSerchCoordinate = 0;
 	 for(uint16_t i = nameStructure->saveCenterOfTheOpticalSpot_x - nameStructure->rangeReport_Right_Left; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
 			if(mas_DATA[i] <= nameStructure->amplitude){
-				if(abs(mas_DATA[i-1]-nameStructure->amplitude)> abs(mas_DATA[i]-nameStructure->amplitude)){
+				if(abs(mas_DATA[i-1]-nameStructure->amplitude)>= abs(mas_DATA[i]-nameStructure->amplitude)){
 			nameStructure->coordinate_x1 =i;
 			nameStructure->errSerchCoordinate = 1;
 				}
@@ -642,7 +722,7 @@ void opticalSpotSearch(parametersOpticalSpot* nameStructure){
 	 }
 	 for(uint16_t i = nameStructure->coordinate_x1+10; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
 			if(mas_DATA[i] >= nameStructure->amplitude){
-					if(abs(mas_DATA[i-1]-nameStructure->amplitude)> abs(mas_DATA[i]-nameStructure->amplitude)){
+					if(abs(mas_DATA[i-1]-nameStructure->amplitude)>= abs(mas_DATA[i]-nameStructure->amplitude)){
 			nameStructure->coordinate_x2 =i;
 				}
 					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){
@@ -688,7 +768,8 @@ void pointReportToMeasure(parametersOpticalSpot* nameStructure){
 FUNCTION FOR CALCULATING THE DEFLECTION OF THE MEMBRANE IN MILLIMETERS 
 */
 void calculationOfDeflectionMillimeters (parametersOpticalSpot* nameStructure){
-	 nameStructure->measurementMillimeters = (nameStructure->centroid  - nameStructure->pointOfTheReportToMeasure)*0.007;
+	 nameStructure->centroidDeviation = nameStructure->centroid  - nameStructure->pointOfTheReportToMeasure;
+	 nameStructure->measurementMillimeters =  nameStructure->centroidDeviation*0.007;
 }
 /*
 	INITIALIZING FIRST OPTICAL SPOT VARIABLES 
@@ -700,7 +781,7 @@ void initVariablesFirstOpticalSpot(){
 	parametersFirstOpticalSpot.centroid= 0;
 	parametersFirstOpticalSpot.measurementMillimeters = 0;
 	parametersFirstOpticalSpot.localMinimum = 0;
-	parametersFirstOpticalSpot.rangeReport_Right_Left = 50; 
+	parametersFirstOpticalSpot.rangeReport_Right_Left = 90; 
 	parametersFirstOpticalSpot.pointOfTheReportToMeasure = 0;
 	parametersFirstOpticalSpot.resetPointOfTheReportToMeasure = 0;
 	parametersFirstOpticalSpot.reportPixelsToTheLeft = 50;
@@ -708,6 +789,7 @@ void initVariablesFirstOpticalSpot(){
 	parametersFirstOpticalSpot.coordinate_x1 = 0;
 	parametersFirstOpticalSpot.coordinate_x2 = 0;
 	parametersFirstOpticalSpot.centerOfTheOpticalSpot_x = 0;
+	parametersFirstOpticalSpot.centroidDeviation = 0;
 }
 /*
 INITIALIZING VARIABLES OF THE SECOND OPTICAL SPOT 
@@ -727,6 +809,7 @@ void initVariablesSecondOpticalSpot(){
 	parametersSecondOpticalSpot.coordinate_x1 = 0;
 	parametersSecondOpticalSpot.coordinate_x2 = 0;
 	parametersSecondOpticalSpot.centerOfTheOpticalSpot_x = 0;
+	parametersSecondOpticalSpot.centroidDeviation=0;
 }
 /*
 INITIALIZING THE VARIABLES OF THE THIRD OPTICAL SPOT 
@@ -738,7 +821,7 @@ void initVariablesThirdOpticalSpot(){
 	parametersThirdOpticalSpot.centroid= 0;
 	parametersThirdOpticalSpot.measurementMillimeters = 0;
 	parametersThirdOpticalSpot.localMinimum = 0;
-	parametersThirdOpticalSpot.rangeReport_Right_Left = 95;
+	parametersThirdOpticalSpot.rangeReport_Right_Left = 250;
 	parametersThirdOpticalSpot.pointOfTheReportToMeasure = 0;
 	parametersThirdOpticalSpot.resetPointOfTheReportToMeasure = 0;
 	parametersThirdOpticalSpot.reportPixelsToTheLeft = 80;
@@ -746,6 +829,7 @@ void initVariablesThirdOpticalSpot(){
 	parametersThirdOpticalSpot.coordinate_x1 = 0;
 	parametersThirdOpticalSpot.coordinate_x2 = 0;
 	parametersThirdOpticalSpot.centerOfTheOpticalSpot_x = 0;
+	parametersThirdOpticalSpot.centroidDeviation = 0;
 }
 /*
 INITIALIZING VARIABLES OF THE FOURTH OPTICAL SPOT 
@@ -758,7 +842,7 @@ void initVariablesFourhtOpticalSpot(){
 	parametersFourhtOpticalSpot.centroid= 0;
 	parametersFourhtOpticalSpot.measurementMillimeters = 0;
 	parametersFourhtOpticalSpot.localMinimum = 0;
-  parametersFourhtOpticalSpot.rangeReport_Right_Left = 105;
+  parametersFourhtOpticalSpot.rangeReport_Right_Left = 250;
 	parametersFourhtOpticalSpot.pointOfTheReportToMeasure = 0;
 	parametersFourhtOpticalSpot.resetPointOfTheReportToMeasure = 0;
 	parametersFourhtOpticalSpot.reportPixelsToTheLeft = 85;
@@ -766,6 +850,7 @@ void initVariablesFourhtOpticalSpot(){
 	parametersFourhtOpticalSpot.coordinate_x1 = 0;
 	parametersFourhtOpticalSpot.coordinate_x2 = 0;
 	parametersFourhtOpticalSpot.centerOfTheOpticalSpot_x = 0;
+	parametersFourhtOpticalSpot.centroidDeviation = 0;
 }
 /*
 INITIALIZING PNEUMATIC SYSTEM VARIABLES 
@@ -784,7 +869,7 @@ void initFlags(){
 		flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;
 		dataRequestForPC = 0;
 		activationPump =0;
-	 activatingSolenoidValve =0;
+	  activatingSolenoidValve =0;
 }
 /*
 PROCESSING OF DATA ACCEPTED FROM PC (PARSING) 
@@ -796,59 +881,62 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 	switch((*nemeStructure).parser_UARTStructures->ID)
 	{ 
 		case 'A':
-		nemeStructure->FirstOpticalSpotStructures->reportPixelsToTheRigh = (rx_input-1000);
+			nemeStructure->FirstOpticalSpotStructures->reportPixelsToTheRigh = (rx_input-1000);
 	  break;
 		case 'B':
-		nemeStructure->FirstOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);
+			nemeStructure->FirstOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);
 	  break;
 		case 'C':
-		nemeStructure->SecondOpticalSpotStructures->reportPixelsToTheRigh = (rx_input-1000);
+			nemeStructure->SecondOpticalSpotStructures->reportPixelsToTheRigh = (rx_input-1000);
 	  break;
 		case 'D':
-		nemeStructure->SecondOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);
+			nemeStructure->SecondOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);
 	  break;
 		case 'E':
-	  nemeStructure->ThirdOpticalSpotStructures->reportPixelsToTheRigh = (rx_input-1000);
+			nemeStructure->ThirdOpticalSpotStructures->reportPixelsToTheRigh = (rx_input-1000);
 	  break;
 		case 'F':
-		nemeStructure->ThirdOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);
+			nemeStructure->ThirdOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);
 	  break;
 		case 'H':
-		nemeStructure->FourhtOpticalSpotStructures->reportPixelsToTheRigh = (rx_input-1000);
+			nemeStructure->FourhtOpticalSpotStructures->reportPixelsToTheRigh = (rx_input-1000);
 	  break;
 		case 'G':
-		nemeStructure->FourhtOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);	
+			nemeStructure->FourhtOpticalSpotStructures->reportPixelsToTheLeft = (rx_input-1000);	
 	  break;
 		case 'I':
-		nemeStructure->FirstOpticalSpotStructures->amplitude = (rx_input-1000);
+			nemeStructure->FirstOpticalSpotStructures->amplitude = (rx_input-1000);
 	  break;
 		case 'J':
-		nemeStructure->SecondOpticalSpotStructures->amplitude = (rx_input-1000);
+			nemeStructure->SecondOpticalSpotStructures->amplitude = (rx_input-1000);
 	  break;
 		case 'K':
-		nemeStructure->ThirdOpticalSpotStructures->amplitude =(rx_input-1000);
+			nemeStructure->ThirdOpticalSpotStructures->amplitude =(rx_input-1000);
 	  break;
 		case 'L':
-		nemeStructure->FourhtOpticalSpotStructures->amplitude = (rx_input-1000);		
+			nemeStructure->FourhtOpticalSpotStructures->amplitude = (rx_input-1000);		
 	  break;
 		case 'M':
-	  nemeStructure->resetOllPointOfTheReportToMeasure = (uint8_t)(rx_input-1000);
+			nemeStructure->resetOllPointOfTheReportToMeasure = (uint8_t)(rx_input-1000);
 	  break;
 		case 'N':
-		nemeStructure->FirstOpticalSpotStructures->resetPointOfTheReportToMeasure = (rx_input-1000); 
+			nemeStructure->FirstOpticalSpotStructures->resetPointOfTheReportToMeasure = (rx_input-1000); 
 	  break;
 		case 'O':
-		nemeStructure->SecondOpticalSpotStructures->resetPointOfTheReportToMeasure = (rx_input-1000); 
+			nemeStructure->SecondOpticalSpotStructures->resetPointOfTheReportToMeasure = (rx_input-1000); 
 	  break;
 		case 'P':
-		nemeStructure->ThirdOpticalSpotStructures->resetPointOfTheReportToMeasure = (rx_input-1000); 
+			nemeStructure->ThirdOpticalSpotStructures->resetPointOfTheReportToMeasure = (rx_input-1000); 
 	  break;
 		case 'Q':
-		nemeStructure->FourhtOpticalSpotStructures->resetPointOfTheReportToMeasure = (rx_input-1000); 
+			nemeStructure->FourhtOpticalSpotStructures->resetPointOfTheReportToMeasure = (rx_input-1000); 
 	  break;
 		case 'R':
-		nemeStructure->PneumaticSystemStructures->setPressure = (rx_input-1000); 
+			nemeStructure->PneumaticSystemStructures->setPressure = (rx_input-1000); 
 	  break;	
+		case 'S':
+			
+	  break;
 		case 'W':
 			if(rx_input==1001){dataRequestForPC = request_X1_X2_X_Xmin_FirstOpticalSpot;}
 			if(rx_input==1002){dataRequestForPC = request_X1_X2_X_Xmin_SecondOpticalSpot;}
@@ -864,6 +952,7 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 			if(rx_input==1012){dataRequestForPC = request_measurementMillimeters_FourhtOpticalSpot;}
 		  if(rx_input==1013){dataRequestForPC = request_measurementMillimeters_OllOpticalSpot;}
    		if(rx_input==1014){dataRequestForPC = request_pressure;} 
+			if(rx_input==1014){dataRequestForPC = request_pressureEndCentroid_FirstOpticalSpot;} 
 	  break;
 			case 'X':
 			if(rx_input==1001){activationPump = SetPupe;} 
@@ -917,6 +1006,31 @@ void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe
 				 flagEndTransfer_UART2_DMA1_ForPC =1;			
 }
 /*
+CONVERSION OF THE MEASUREMENT IN MILLIMETERS OF THE CALCULATED AND FROM THE MICROMETER AND TRANSMISSION TO THE UAR
+*/
+void convertToCharAndPassUart_millimetrs(parametersOpticalSpot *nemeStructe){
+	
+	
+		sprintf(CharForUART.transferPackageForLabVIEW_Millimeters, "J%c%d%d\n",nemeStructe->id_OpticalSpot, int_DatadataMicrometrs+50000,(int)((nemeStructe->measurementMillimeters*1000000)+5000000));
+			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
+				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
+				}
+			   HAL_UART_Transmit_DMA(&huart2, (uint8_t*)CharForUART.transferPackageForLabVIEW_centoide, sizeCharMillimeters+1);	
+				 flagEndTransfer_UART2_DMA1_ForPC =1;	
+			}	
+
+void convertToCharAndPassUart_presuareFndCentroid(parametersOpticalSpot *nemeStructe){
+	    sprintf(CharForUART.transferPackageForLabVIEW_presuareFndCentroid, "P%c%d%d\n",nemeStructe->id_OpticalSpot, 
+	                                                                   (int)(PneumaticSystem.PressureFromPiezoelectricSensor*100)+10000000,
+	                                                                   (int)(nemeStructe->centroidDeviation*100)+100000);
+			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
+				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
+				}
+			   HAL_UART_Transmit_DMA(&huart2, (uint8_t*)CharForUART.transferPackageForLabVIEW_centoide, sizeCharPresuareForUART_presuareFndCentroid +1);	
+				 flagEndTransfer_UART2_DMA1_ForPC =1;	
+			}	
+
+/*
 PRESSURE CONVERSION WITH UNION 
 */
 void unionOfDataPresuareSensor(parametersOfThePneumaticSystem *structure1, unioncharPresuareStructures *structure2 ){
@@ -935,7 +1049,10 @@ GLUING BYTE ACCEPTED VIA UART FROM MICROMETER
 PRESSURE CALCULATION USING LINEAR INTERPOLATION FUNCTION 
 	*/
 	void pressureCalculation(parametersOpticalSpot* nemeStructure){
-		 int millimeters = (int)(nemeStructure->measurementMillimeters*1000);
+		
+		 float millimeters = (float)(nemeStructure->measurementMillimeters);
+		
+		if(millimeters>=0){
 		if(millimeters <= endFirstSegment){
 			nemeStructure->measurementPresuare = coefficient_k1*millimeters-coefficient_b1;
 		}	
@@ -946,7 +1063,7 @@ PRESSURE CALCULATION USING LINEAR INTERPOLATION FUNCTION
 		  nemeStructure->measurementPresuare = coefficient_k3*millimeters-coefficient_b3;
 		}
 	}
-	
+	}
 
 
 
