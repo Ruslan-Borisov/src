@@ -59,7 +59,7 @@ NAMED CONSTANTS FOR TRACKING THE OPTICAL SPOT CENTROIDE QUERY
 #define request_centroid_FirstOpticalSpot       5 // 
 #define request_centroid_SecondOpticalSpot      6 // 
 #define request_centroid_ThirdOpticalSpot       7 // 
-#define request_centroid_FourhtOpticalSpot      8 // Ð
+#define request_centroid_FourhtOpticalSpot      8 // 
 /*
 
 NAMED CONSTANTS FOR TRACKING A REQUEST TO MOVE AN OPTICAL SPOT IN MILLIMETERS
@@ -75,6 +75,9 @@ NAMED CONSTANTS FOR TRACKING A REQUEST TO DETERMINE THE CURRENT PRESSURE
 */
 #define request_pressure                                      14
 #define request_pressureEndCentroid_FirstOpticalSpot          15
+#define request_pressureEndCentroid_SecondOpticalSpot         16
+#define request_pressureEndCentroid_ThirdOpticalSpot          17
+#define request_pressureEndCentroid_FourhtOpticalSpot         18
 /*
 
 NAMING A CONSTANT FOR SPECIFYING THE SIZE OF AN ARRAY
@@ -84,7 +87,7 @@ NAMING A CONSTANT FOR SPECIFYING THE SIZE OF AN ARRAY
 #define sizeCharPresuare                                       4
 #define sizeCharPresuareForUART                               23 // 
 #define sizeCharMillimeters                                   14
-#define sizeCharPresuareForUART_presuareFndCentroid           15
+#define sizeCharPresuareForUART_presuareFndCentroid           19
 //================================================
 /*
 NAMING A CONSTANT FOR SETTING THE LENGTH OF SEGMENTS FOR INTERPOLATION FUNCTIONS
@@ -321,6 +324,7 @@ void convertToCharAndPassUart_millimetrs(parametersOpticalSpot *nemeStructe);
 void convertToCharAndPassUart_presuareFndCentroid(parametersOpticalSpot *nemeStructe);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void testing();
 
 /* USER CODE END PFP */
 
@@ -407,7 +411,6 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 						 GPIOD->BSRR |=  GPIO_BSRR_BS12;
 					}
 			for(int i= 0; i< 5000; i++){}
-			
 			GPIOE->BSRR |=  GPIO_BSRR_BR10;	
 			for(int i= 0; i< 5000; i++){}
 			MX_TIM4_Init();
@@ -572,8 +575,32 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 			// FIRST OPTICAL SPOT
 			if(dataRequestForPC == request_pressureEndCentroid_FirstOpticalSpot){ 
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
-				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);		
+				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);	
+        calculationOfDeflectionMillimeters(&parametersFirstOpticalSpot);					
         convertToCharAndPassUart_presuareFndCentroid(&parametersFirstOpticalSpot);				
+			}
+			// SECOND OPTICAL SPOT
+				if(dataRequestForPC == request_pressureEndCentroid_SecondOpticalSpot){ 
+				opticalSpotSearch(&parametersSecondOpticalSpot); 
+				calculationOpticalSpotCentroid(&parametersSecondOpticalSpot);	
+        calculationOfDeflectionMillimeters(&parametersSecondOpticalSpot);					
+        convertToCharAndPassUart_presuareFndCentroid(&parametersSecondOpticalSpot);				
+			}
+			
+			// FRID OPTICAL SPOT
+				if(dataRequestForPC == request_pressureEndCentroid_ThirdOpticalSpot){ 
+				opticalSpotSearch(&parametersThirdOpticalSpot); 
+				calculationOpticalSpotCentroid(&parametersThirdOpticalSpot);	
+        calculationOfDeflectionMillimeters(&parametersThirdOpticalSpot);					
+        convertToCharAndPassUart_presuareFndCentroid(&parametersThirdOpticalSpot);				
+			}
+			
+			// THE FOURTH  OPTICAL SPOT
+				if(dataRequestForPC == request_pressureEndCentroid_FourhtOpticalSpot){ 
+				opticalSpotSearch(&parametersFourhtOpticalSpot); 
+				calculationOpticalSpotCentroid(&parametersFourhtOpticalSpot);	
+        calculationOfDeflectionMillimeters(&parametersFourhtOpticalSpot);					
+        convertToCharAndPassUart_presuareFndCentroid(&parametersFourhtOpticalSpot);				
 			}
 			/*
 			I RECEIVED A REQUEST TO GET THE CURRENT PRESSURE VALUE(FROM THE PIEZO SENSOR AND THE CALCULATED VALUE ) AND THE DEFLECTION IN MM FROM THE MICROMETER
@@ -586,7 +613,8 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 				pressureCalculation(&parametersFirstOpticalSpot);
 				convertToCharAndPassUart_Presuare(&ToStructuresForParser, &parametersFirstOpticalSpot);
 			}
-
+			
+		
 		  flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;	
 		}
 
@@ -669,16 +697,14 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 				else {
 						for(int i=0; i<50000; i++){}
 				}
-			
+			  
 //				GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
 //				GPIOD->MODER |= GPIO_MODER_MODER12_1;
 				GPIOD->BSRR |=  GPIO_BSRR_BS6;
         MX_TIM4_Init();
-				for(uint8_t i=0; i<5; i++){}
-				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-				for(uint8_t i=0; i<5; i++){}
 				HAL_TIM_Base_Start(&htim8);	
         GPIOE->BSRR |=  GPIO_BSRR_BS10;	
+				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
         HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					
 	}
 
@@ -743,6 +769,7 @@ void opticalSpotSearch(parametersOpticalSpot* nameStructure){
 	    nameStructure->saveCenterOfTheOpticalSpot_x = nameStructure->centerOfTheOpticalSpot_x; 
 	 
 }
+
 /* 
     OPTICAL SPOT CENTROID CALCULATION FUNCTION  
 */		
@@ -952,7 +979,10 @@ void parserOfDataFromPC(pointerToStructuresForParser *nemeStructure){
 			if(rx_input==1012){dataRequestForPC = request_measurementMillimeters_FourhtOpticalSpot;}
 		  if(rx_input==1013){dataRequestForPC = request_measurementMillimeters_OllOpticalSpot;}
    		if(rx_input==1014){dataRequestForPC = request_pressure;} 
-			if(rx_input==1014){dataRequestForPC = request_pressureEndCentroid_FirstOpticalSpot;} 
+			if(rx_input==1015){dataRequestForPC = request_pressureEndCentroid_FirstOpticalSpot;} 
+			if(rx_input==1016){dataRequestForPC = request_pressureEndCentroid_SecondOpticalSpot;} 
+			if(rx_input==1017){dataRequestForPC = request_pressureEndCentroid_ThirdOpticalSpot;} 
+			if(rx_input==1018){dataRequestForPC = request_pressureEndCentroid_FourhtOpticalSpot;} 
 	  break;
 			case 'X':
 			if(rx_input==1001){activationPump = SetPupe;} 
@@ -1021,12 +1051,12 @@ void convertToCharAndPassUart_millimetrs(parametersOpticalSpot *nemeStructe){
 
 void convertToCharAndPassUart_presuareFndCentroid(parametersOpticalSpot *nemeStructe){
 	    sprintf(CharForUART.transferPackageForLabVIEW_presuareFndCentroid, "P%c%d%d\n",nemeStructe->id_OpticalSpot, 
-	                                                                   (int)(PneumaticSystem.PressureFromPiezoelectricSensor*100)+10000000,
-	                                                                   (int)(nemeStructe->centroidDeviation*100)+100000);
+	                                                                   (int)((PneumaticSystem.PressureFromPiezoelectricSensor*100)+100000000),
+	                                                                   (int)((nemeStructe->centroidDeviation*10000)+50000000));
 			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
 				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
 				}
-			   HAL_UART_Transmit_DMA(&huart2, (uint8_t*)CharForUART.transferPackageForLabVIEW_centoide, sizeCharPresuareForUART_presuareFndCentroid +1);	
+			   HAL_UART_Transmit_DMA(&huart2, (uint8_t*)CharForUART.transferPackageForLabVIEW_presuareFndCentroid, sizeCharPresuareForUART_presuareFndCentroid +1);	
 				 flagEndTransfer_UART2_DMA1_ForPC =1;	
 			}	
 
@@ -1063,6 +1093,14 @@ PRESSURE CALCULATION USING LINEAR INTERPOLATION FUNCTION
 		  nemeStructure->measurementPresuare = coefficient_k3*millimeters-coefficient_b3;
 		}
 	}
+	}
+	
+	void testing(){
+	for(uint16_t i=0; i<4174; i++){
+	printf("%u\n", mas_DATA[i]);
+	}
+	
+	
 	}
 
 
