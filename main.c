@@ -40,7 +40,7 @@ NAMED CONSTANTS FOR PUMP AND SOLENOID VALVE CONTROL
 */
 #define flagPump                               (GPIOC->IDR |=  GPIO_BSRR_BS10)
 
-#define sizeBufDMA                              4174   // 
+#define sizeBufDMA                              4174  // 
 #define SetPupe                                 1      // 
 #define ResetPupe                               2      // 
 #define SetSolenoid                             1      // 
@@ -114,10 +114,14 @@ NAMING A CONSTANT FOR SETTING THE LENGTH OF SEGMENTS FOR INTERPOLATION FUNCTIONS
 /*
 Parameters of the optical spot
 */ 
+
+
 typedef struct {
 	  char  id_OpticalSpot; // OPTICAL SPOT IDENTIFIER 
  	  uint16_t coordinate_x1; // START OF OPTICAL SPOT 
+	  uint16_t saveCoordinate_x1; // START OF OPTICAL SPOT 
 	  uint16_t coordinate_x2; // END OF OPTICAL SPOT 
+	  uint16_t saveCoordinate_x2; //
 	  uint16_t centerOfTheOpticalSpot_x; // OPTICAL SPOT CENTER 
 	  uint16_t localMinimum; // LOCAL MINIMUM OF OPTICAL SPOT 
 	  uint16_t startOfSearch; // COORDINATE TO START OPTICAL SPOT SEARCH
@@ -203,6 +207,7 @@ typedef struct {
 		volatile uint8_t dataRequestForPC;
 	  volatile   uint8_t activationPump;
 		volatile uint8_t activatingSolenoidValve;
+    volatile uint8_t counter;
 //=======================================
 //=======================================
 // data arrays
@@ -324,6 +329,12 @@ void convertToCharAndPassUart_millimetrs(parametersOpticalSpot *nemeStructe);
 void convertToCharAndPassUart_presuareFndCentroid(parametersOpticalSpot *nemeStructe);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void opticalSpotSearchX1(parametersOpticalSpot* nameStructure);
+void opticalSpotSearchX2(parametersOpticalSpot* nameStructure);
+void opticalSpotSearchCentr(parametersOpticalSpot* nameStructure);
+void opticalSpotFindingError(parametersOpticalSpot* nameStructure);
+
+
 void testing();
 
 /* USER CODE END PFP */
@@ -363,12 +374,14 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
-  MX_TIM4_Init();
   MX_TIM8_Init();
-  MX_TIM2_Init();
   MX_USART2_UART_Init();
   MX_USART3_UART_Init();
   MX_UART4_Init();
+  MX_TIM4_Init();
+  MX_TIM2_Init();
+  MX_TIM1_Init();
+  MX_TIM12_Init();
   /* USER CODE BEGIN 2 */
 	
 //----------------------------------------
@@ -403,9 +416,6 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 //*************************************** 
 
 
-			 GPIOE->BSRR |=  GPIO_BSRR_BS10;
-			 GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
-			 GPIOD->MODER |= GPIO_MODER_MODER12_0;	
 			 if((!(GPIOD->ODR& GPIO_ODR_OD12))==SET)
 					{
 						 GPIOD->BSRR |=  GPIO_BSRR_BS12;
@@ -413,14 +423,17 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 			for(int i= 0; i< 5000; i++){}
 			GPIOE->BSRR |=  GPIO_BSRR_BR10;	
 			for(int i= 0; i< 5000; i++){}
-			MX_TIM4_Init();
+			
 			GPIOE->BSRR |=  GPIO_BSRR_BS10;
 				
-		HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+  HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_1);
 //**************************************** 
+		HAL_TIM_Base_Start(&htim4);
 		HAL_TIM_Base_Start(&htim8);
+		HAL_TIM_Base_Start(&htim2);
+				
 //***************************************	
-	  HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
+
 //***************************************
  GPIOC->BSRR |=  GPIO_BSRR_BR7; 
   /* USER CODE END 2 */
@@ -676,14 +689,13 @@ void SystemClock_Config(void)
 DMA INTERRUPT HANDLE ON BUFFER FULL
 */
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
-			 HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
-	     GPIOD->BSRR |=  GPIO_BSRR_BR6;
+			 //HAL_TIM_PWM_Stop(&htim4, TIM_CHANNEL_1);
+	    // GPIOD->BSRR |=  GPIO_BSRR_BR6;
 			 GPIOE->BSRR |=  GPIO_BSRR_BR10;
-			 HAL_TIM_Base_Stop(&htim8);
-			 GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
-			 GPIOD->MODER |= GPIO_MODER_MODER12_0;
-				
-			 if((!(GPIOD->ODR& GPIO_ODR_OD12))==SET)
+			 HAL_TIM_Base_Stop(&htim2);
+			GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
+			GPIOD->MODER |= GPIO_MODER_MODER12_0;
+							 if((!(GPIOD->ODR& GPIO_ODR_OD12))==SET)
 					{
 						 GPIOD->BSRR |=  GPIO_BSRR_BS12;
 					}
@@ -695,17 +707,20 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc){
 						flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 1;
 				}
 				else {
-						for(int i=0; i<50000; i++){}
+						for(int i=0; i<5000; i++){}
 				}
 			  
 //				GPIOD->MODER &=~ GPIO_MODER_MODER12_Msk;
 //				GPIOD->MODER |= GPIO_MODER_MODER12_1;
-				GPIOD->BSRR |=  GPIO_BSRR_BS6;
+				//GPIOD->BSRR |=  GPIO_BSRR_BS6;
+				
         MX_TIM4_Init();
-				HAL_TIM_Base_Start(&htim8);	
+				HAL_TIM_OC_Start(&htim4, TIM_CHANNEL_1);
+				for(int i=0; i<100; i++){}
+				HAL_TIM_Base_Start(&htim2);	
         GPIOE->BSRR |=  GPIO_BSRR_BS10;	
-				HAL_TIM_PWM_Start(&htim4, TIM_CHANNEL_1);
-        HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					
+	
+        //HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);					
 	}
 
 	
@@ -730,44 +745,131 @@ DMA INTERRUPT HANDLER AT DATA RECEIVE UART
 
 /* 
 OPTICAL SPOT COORDINATE CALCULATION FUNCTION 
+	
 */
-void opticalSpotSearch(parametersOpticalSpot* nameStructure){                                  
-	   nameStructure->errSerchCoordinate = 0;
+	
+	void opticalSpotSearch(parametersOpticalSpot* nameStructure){  
+	opticalSpotSearchX1(nameStructure);
+  opticalSpotSearchX2(nameStructure);
+	opticalSpotFindingError(nameStructure);
+  opticalSpotSearchCentr(nameStructure);
+	   
+	 
+}
+//void opticalSpotSearch(parametersOpticalSpot* nameStructure){  
+//	
+//	   nameStructure->errSerchCoordinate = 0;
+//	   uint16_t coordinate_x1;
+//	   uint16_t coordinate_x2;
+//	 for(uint16_t i = nameStructure->saveCenterOfTheOpticalSpot_x - nameStructure->rangeReport_Right_Left; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
+//			if(mas_DATA[i] <= nameStructure->amplitude){
+//				if(abs(mas_DATA[i-1]-nameStructure->amplitude)>= abs(mas_DATA[i]-nameStructure->amplitude)){
+//					
+//				uint16_t coordinate_x1 =i;
+//		//	nameStructure->coordinate_x1 =i;
+//			nameStructure->errSerchCoordinate = 1;
+//				}
+//					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){
+//				coordinate_x1 =i-1;				
+//			//nameStructure->coordinate_x1 =i-1;
+//			nameStructure->errSerchCoordinate = 1;
+//				}
+//			break;
+//			}
+//	 }
+//	 for(uint16_t i = nameStructure->coordinate_x1+10; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
+//			if(mas_DATA[i] >= nameStructure->amplitude){
+//					if(abs(mas_DATA[i-1]-nameStructure->amplitude)>= abs(mas_DATA[i]-nameStructure->amplitude)){
+//			coordinate_x2 =i;			
+//			// nameStructure->coordinate_x2 =i;
+//				}
+//					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){
+//			coordinate_x2 =i-1;
+//		//	nameStructure->coordinate_x2 =i-1;
+//				}
+//				break;
+//			}
+//	 }
+//	 short min = 3500;
+//	 for(uint16_t i = nameStructure->coordinate_x1-10; i< nameStructure->coordinate_x2+10; i++){
+//			
+//				if(mas_DATA[i] < min){
+//					min = mas_DATA[i];
+//					nameStructure->localMinimum =i;
+//				}
+//	 }
+//	 
+//	if(coordinate_x2!=nameStructure->coordinate_x2){
+//	   nameStructure->coordinate_x1=coordinate_x1; 
+//	}
+//	if(coordinate_x1!=nameStructure->coordinate_x1){
+//	   nameStructure->coordinate_x2=coordinate_x2; 
+//	}
+//			nameStructure->centerOfTheOpticalSpot_x = (nameStructure->coordinate_x1 + nameStructure->coordinate_x2)/2;
+//	    nameStructure->saveCenterOfTheOpticalSpot_x = nameStructure->centerOfTheOpticalSpot_x; 
+//	 
+//}
+void opticalSpotSearchX1(parametersOpticalSpot* nameStructure){
+
+ nameStructure->errSerchCoordinate = 0;
 	 for(uint16_t i = nameStructure->saveCenterOfTheOpticalSpot_x - nameStructure->rangeReport_Right_Left; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
 			if(mas_DATA[i] <= nameStructure->amplitude){
 				if(abs(mas_DATA[i-1]-nameStructure->amplitude)>= abs(mas_DATA[i]-nameStructure->amplitude)){
-			nameStructure->coordinate_x1 =i;
-			nameStructure->errSerchCoordinate = 1;
+						nameStructure->saveCoordinate_x1 =i;	
+						nameStructure->errSerchCoordinate = 1;
 				}
-					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){
-			nameStructure->coordinate_x1 =i-1;
-			nameStructure->errSerchCoordinate = 1;
+				if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){			
+						nameStructure->saveCoordinate_x1 =i-1;
+						nameStructure->errSerchCoordinate = 1;
 				}
 			break;
 			}
 	 }
-	 for(uint16_t i = nameStructure->coordinate_x1+10; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
+}
+void opticalSpotSearchX2(parametersOpticalSpot* nameStructure){
+for(uint16_t i = nameStructure->saveCoordinate_x1+10; i<nameStructure->saveCenterOfTheOpticalSpot_x + nameStructure->rangeReport_Right_Left; i++){
 			if(mas_DATA[i] >= nameStructure->amplitude){
-					if(abs(mas_DATA[i-1]-nameStructure->amplitude)>= abs(mas_DATA[i]-nameStructure->amplitude)){
-			nameStructure->coordinate_x2 =i;
+					if(abs(mas_DATA[i-1]-nameStructure->amplitude)>= abs(mas_DATA[i]-nameStructure->amplitude)){		
+			       nameStructure->saveCoordinate_x2 =i;
 				}
-					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){
-			nameStructure->coordinate_x2 =i-1;
+					if(abs(mas_DATA[i-1]-nameStructure->amplitude)<abs(mas_DATA[i]-nameStructure->amplitude)){	
+			      nameStructure->saveCoordinate_x2 =i-1;
 				}
 				break;
 			}
 	 }
-	 short min = 3500;
-	 for(uint16_t i = nameStructure->coordinate_x1-10; i< nameStructure->coordinate_x2+10; i++){
-			
-				if(mas_DATA[i] < min){
-					min = mas_DATA[i];
-					nameStructure->localMinimum =i;
-				}
-	 }
-			nameStructure->centerOfTheOpticalSpot_x = (nameStructure->coordinate_x1 + nameStructure->coordinate_x2)/2;
+}
+void opticalSpotSearchCentr(parametersOpticalSpot* nameStructure){
+      nameStructure->centerOfTheOpticalSpot_x = (nameStructure->coordinate_x1 + nameStructure->coordinate_x2)/2;
 	    nameStructure->saveCenterOfTheOpticalSpot_x = nameStructure->centerOfTheOpticalSpot_x; 
+}
+void opticalSpotFindingError(parametersOpticalSpot* nameStructure){
+	
+	uint8_t flagX1=0;
+	uint8_t flagX2=0;
+   if(counter<100){
+		 counter++;
+	 nameStructure->coordinate_x1 = nameStructure->saveCoordinate_x1;
+	 nameStructure->coordinate_x2 = nameStructure->saveCoordinate_x2;
+	 }
+	 if(counter==100){
+		 if(nameStructure->coordinate_x2 != nameStructure->saveCoordinate_x2){
+			 flagX1=1;
+		  
+		 }
+		 if(nameStructure->coordinate_x1 != nameStructure->saveCoordinate_x1){
+			 flagX2 =1;
+		 }
 	 
+	 }
+	 if(flagX1==1){
+	 nameStructure->coordinate_x1 = nameStructure->saveCoordinate_x1;
+	 }
+	 if(flagX2==1){
+	 nameStructure->coordinate_x2 = nameStructure->saveCoordinate_x2;
+	 }
+	 
+
 }
 
 /* 
@@ -897,6 +999,7 @@ void initFlags(){
 		dataRequestForPC = 0;
 		activationPump =0;
 	  activatingSolenoidValve =0;
+	  uint8_t counter = 0;
 }
 /*
 PROCESSING OF DATA ACCEPTED FROM PC (PARSING) 
