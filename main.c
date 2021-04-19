@@ -92,20 +92,38 @@ NAMING A CONSTANT FOR SPECIFYING THE SIZE OF AN ARRAY
 /*
 NAMING A CONSTANT FOR SETTING THE LENGTH OF SEGMENTS FOR INTERPOLATION FUNCTIONS
 */
-#define endFirstSegment                                       810
-#define endSecondSegment                                      1230
+#define endFirstSegment                                       69084 // *1000
+#define endSecondSegment                                      132247 // *1000
+#define endFridSegment                                        192225 // *1000 
+#define endFourhtSegment                                      227147 // *1000
 //================================================
-#define coefficient_k1                                        2588110
+#define coefficient_k1                                        69868 // *1000
 #define coefficient_b1                                        0
 //================================================
-#define coefficient_k2                                        73560690
-#define coefficient_b2                                        40637400
+#define coefficient_k2                                        237 // *1000
+#define coefficient_b2                                        11570785 // *1000
 //================================================
-#define coefficient_k3                                        12562400
-#define coefficient_b3                                        104682000
+#define coefficient_k3                                        529 // *1000
+#define coefficient_b3                                        50842646 // *1000
+//=======================================
+#define coefficient_k4                                        818 // *1000
+#define coefficient_b4                                        106511617 // *1000
+//=======================================
+#define coefficient_k5                                        1650 // *1000
+#define coefficient_b5                                        295446442 // *1000
 //=======================================
 #define resetPoint                                             1
 //=======================================
+
+/*
+  STANDARD ATMOSPHERIC PARAMETERS
+*/
+#define seaLevelPressure                                        101325000 // Pa*1000 Po 
+#define standardTemperature                                     27315     // K*1000  T
+#define temperatureGradient                                     0.0065  // r gr/m
+#define gasConstant                                             29.27// R m/gr
+
+//=================================================
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -137,6 +155,7 @@ typedef struct {
 	  double measurementMillimeters; // MEASURED VALUE IN MILLIMETERS 
 	  int measurementPresuare; // MEASURED VALUE IN PASCALS 
 	  double centroidDeviation;
+	   int flightAltitude;
 }parametersOpticalSpot;
 
 /* 
@@ -327,6 +346,12 @@ void convertToCharAndPassUart_millimetrs(parametersOpticalSpot *nemeStructe);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void convertToCharAndPassUart_presuareFndCentroid(parametersOpticalSpot *nemeStructe);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void calculationHeighByPressure(parametersOpticalSpot* nemeStructure);
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+void calculationHeighByPressure(parametersOpticalSpot* nemeStructure);
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 void opticalSpotSearchX1(parametersOpticalSpot* nameStructure);
@@ -616,14 +641,14 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
         convertToCharAndPassUart_presuareFndCentroid(&parametersFourhtOpticalSpot);				
 			}
 			/*
-			I RECEIVED A REQUEST TO GET THE CURRENT PRESSURE VALUE(FROM THE PIEZO SENSOR AND THE CALCULATED VALUE ) AND THE DEFLECTION IN MM FROM THE MICROMETER
+			GETTING THE PRESSURE FROM THE PIEZO SENSOR AND CALCULATING IT
 			*/		
 			
 			if(dataRequestForPC==request_pressure){
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);
-        calculationOfDeflectionMillimeters (&parametersFirstOpticalSpot);		
-				pressureCalculation(&parametersFirstOpticalSpot);
+			//	pressureCalculation(&parametersFirstOpticalSpot);
+				 calculationHeighByPressure(&parametersFirstOpticalSpot);
 				convertToCharAndPassUart_Presuare(&ToStructuresForParser, &parametersFirstOpticalSpot);
 			}
 			
@@ -919,6 +944,7 @@ void initVariablesFirstOpticalSpot(){
 	parametersFirstOpticalSpot.coordinate_x2 = 0;
 	parametersFirstOpticalSpot.centerOfTheOpticalSpot_x = 0;
 	parametersFirstOpticalSpot.centroidDeviation = 0;
+	parametersFirstOpticalSpot.measurementPresuare = 115200000;
 }
 /*
 INITIALIZING VARIABLES OF THE SECOND OPTICAL SPOT 
@@ -996,7 +1022,7 @@ void initFlags(){
 		flagEndReceiv_UART2_DMA1_FromPC = 0;
 	  flagEndReceiv_UART3_DMA1_FromfMicrometer = 0;
 		flagsEndOfTheCCDLineSurvey_ADC1_DMA2 = 0;
-		dataRequestForPC = 0;
+		dataRequestForPC = request_pressure;
 		activationPump =0;
 	  activatingSolenoidValve =0;
 	  uint8_t counter = 0;
@@ -1130,8 +1156,8 @@ void convertToCharAndPassUart_centroid(parametersOpticalSpot *nemeStructe){
 CONVERSION OF PRESSURE (FROM SENSOR AND DESIGNED) AND DEFLECTION (FROM MICROMETER) INTO A STRING AND TRANSFER TO UART 
 */
 void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe,  parametersOpticalSpot *nemeStructe1){
-			sprintf(CharForUART.transferPackageForLabVIEW_Presuatr, "O%d%d\%d\n",(int)(nemeStructe->PneumaticSystemStructures->PressureFromPiezoelectricSensor*100)+10000000,
-	           int_DatadataMicrometrs+50000, nemeStructe1->measurementPresuare+100000000);
+			sprintf(CharForUART.transferPackageForLabVIEW_Presuatr, "O%c%d%d\n", nemeStructe1->id_OpticalSpot, (int)(nemeStructe->PneumaticSystemStructures->PressureFromPiezoelectricSensor*100)+10000000,
+	         nemeStructe1->measurementPresuare+200000000);
 			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
 				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
 				}
@@ -1182,29 +1208,43 @@ GLUING BYTE ACCEPTED VIA UART FROM MICROMETER
 PRESSURE CALCULATION USING LINEAR INTERPOLATION FUNCTION 
 	*/
 	void pressureCalculation(parametersOpticalSpot* nemeStructure){
-		
-		 float millimeters = (float)(nemeStructure->measurementMillimeters);
-		
-		if(millimeters>=0){
-		if(millimeters <= endFirstSegment){
-			nemeStructure->measurementPresuare = coefficient_k1*millimeters-coefficient_b1;
-		}	
-		if(millimeters > endFirstSegment && millimeters <= endSecondSegment ){
-		  nemeStructure->measurementPresuare = coefficient_k2*millimeters-coefficient_b2;
-		}	
-		if(millimeters > endSecondSegment){
-		  nemeStructure->measurementPresuare = coefficient_k3*millimeters-coefficient_b3;
+		 int pressureCalculation;
+		 int centoidConvertInt;
+		 centoidConvertInt = (int)(nemeStructure->centroidDeviation*1000);
+		// First Segment
+		if(centoidConvertInt<=endFirstSegment){
+		 pressureCalculation = coefficient_k1*centoidConvertInt - coefficient_b1;
 		}
+		// Second Segment
+			if(centoidConvertInt>endFirstSegment && centoidConvertInt<=endSecondSegment){
+		 pressureCalculation = coefficient_k2*centoidConvertInt - coefficient_b2;
+		}
+			// Frid Segment
+				if(centoidConvertInt>endSecondSegment && centoidConvertInt<=endFridSegment){
+		 pressureCalculation = coefficient_k3*centoidConvertInt - coefficient_b3;
+		}
+				//Fourht Segment
+		if(centoidConvertInt>endFridSegment && centoidConvertInt<=endFourhtSegment){
+		 pressureCalculation = coefficient_k4*centoidConvertInt - coefficient_b4;
+		}
+		   // fifth  Segment
+			if(centoidConvertInt>endFourhtSegment){
+		 pressureCalculation = coefficient_k5*centoidConvertInt - coefficient_b5;
+		}
+				nemeStructure->measurementPresuare = pressureCalculation;
 	}
-	}
+void calculationHeighByPressure(parametersOpticalSpot* nemeStructure){
 	
-	void testing(){
-	for(uint16_t i=0; i<4174; i++){
-	printf("%u\n", mas_DATA[i]);
-	}
+	int pressureDivision = nemeStructure->measurementPresuare/seaLevelPressure;
+	float gradientMultiplyGasConstant = gasConstant*temperatureGradient;
+	float divideTemperatureByGradient = standardTemperature/gasConstant;
+	float exponentiation = pow(pressureDivision,gasConstant*temperatureGradient);
+	nemeStructure->flightAltitude = (int)((1-exponentiation)*gradientMultiplyGasConstant*1000);
+	
+}
 	
 	
-	}
+
 
 
 
