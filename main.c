@@ -87,30 +87,30 @@ NAMING A CONSTANT FOR SPECIFYING THE SIZE OF AN ARRAY
 #define sizeCharPresuare                                       4
 #define sizeCharPresuareForUART                               23 // 
 #define sizeCharMillimeters                                   14
-#define sizeCharPresuareForUART_presuareFndCentroid           19
+#define sizeCharPresuareForUART_presuareFndCentroid           28
 //================================================
 /*
 NAMING A CONSTANT FOR SETTING THE LENGTH OF SEGMENTS FOR INTERPOLATION FUNCTIONS
 */
-#define endFirstSegment                                       69084 // *1000
-#define endSecondSegment                                      132247 // *1000
-#define endFridSegment                                        192225 // *1000 
-#define endFourhtSegment                                      227147 // *1000
+#define endFirstSegment                                       69 
+#define endSecondSegment                                      132 
+#define endFridSegment                                        192 
+#define endFourhtSegment                                      227 
 //================================================
-#define coefficient_k1                                        69868 // *1000
+#define coefficient_k1                                        69//
 #define coefficient_b1                                        0
 //================================================
-#define coefficient_k2                                        237 // *1000
-#define coefficient_b2                                        11570785 // *1000
+#define coefficient_k2                                        237 
+#define coefficient_b2                                        11569 
 //================================================
-#define coefficient_k3                                        529 // *1000
-#define coefficient_b3                                        50842646 // *1000
+#define coefficient_k3                                        529 
+#define coefficient_b3                                        50843
 //=======================================
-#define coefficient_k4                                        818 // *1000
-#define coefficient_b4                                        106511617 // *1000
+#define coefficient_k4                                        819 
+#define coefficient_b4                                        106512
 //=======================================
-#define coefficient_k5                                        1650 // *1000
-#define coefficient_b5                                        295446442 // *1000
+#define coefficient_k5                                        1650 
+#define coefficient_b5                                        295446 
 //=======================================
 #define resetPoint                                             1
 //=======================================
@@ -118,10 +118,7 @@ NAMING A CONSTANT FOR SETTING THE LENGTH OF SEGMENTS FOR INTERPOLATION FUNCTIONS
 /*
   STANDARD ATMOSPHERIC PARAMETERS
 */
-#define seaLevelPressure                                        101325000 // Pa*1000 Po 
-#define standardTemperature                                     27315     // K*1000  T
-#define temperatureGradient                                     0.0065  // r gr/m
-#define gasConstant                                             29.27// R m/gr
+
 
 //=================================================
 #include <stdio.h>
@@ -153,9 +150,9 @@ typedef struct {
 	  uint16_t saveCenterOfTheOpticalSpot_x;// STORED OPTICAL SPOT CENTROID VALUE 
   	double pointOfTheReportToMeasure; // CENTROID VALUE COUNTED FROM (ZERO) 
 	  double measurementMillimeters; // MEASURED VALUE IN MILLIMETERS 
-	  int measurementPresuare; // MEASURED VALUE IN PASCALS 
+	  double measurementPresuare; // MEASURED VALUE IN PASCALS 
 	  double centroidDeviation;
-	   int flightAltitude;
+	  double flightAltitude;
 }parametersOpticalSpot;
 
 /* 
@@ -415,6 +412,7 @@ initVariablesFirstOpticalSpot();
 initVariablesSecondOpticalSpot();
 initVariablesThirdOpticalSpot();
 initVariablesFourhtOpticalSpot();
+initFlags();
 //----------------------------------------
 //---------------------------------------
 initVariablesPneumaticSystem(&PneumaticSystem);
@@ -614,14 +612,16 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 			if(dataRequestForPC == request_pressureEndCentroid_FirstOpticalSpot){ 
 				opticalSpotSearch(&parametersFirstOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);	
-        calculationOfDeflectionMillimeters(&parametersFirstOpticalSpot);					
+        calculationOfDeflectionMillimeters(&parametersFirstOpticalSpot);	
+        pressureCalculation(&parametersFirstOpticalSpot);				
         convertToCharAndPassUart_presuareFndCentroid(&parametersFirstOpticalSpot);				
 			}
 			// SECOND OPTICAL SPOT
 				if(dataRequestForPC == request_pressureEndCentroid_SecondOpticalSpot){ 
 				opticalSpotSearch(&parametersSecondOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersSecondOpticalSpot);	
-        calculationOfDeflectionMillimeters(&parametersSecondOpticalSpot);					
+        calculationOfDeflectionMillimeters(&parametersSecondOpticalSpot);		
+        pressureCalculation(&parametersFirstOpticalSpot);							
         convertToCharAndPassUart_presuareFndCentroid(&parametersSecondOpticalSpot);				
 			}
 			
@@ -629,7 +629,8 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 				if(dataRequestForPC == request_pressureEndCentroid_ThirdOpticalSpot){ 
 				opticalSpotSearch(&parametersThirdOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersThirdOpticalSpot);	
-        calculationOfDeflectionMillimeters(&parametersThirdOpticalSpot);					
+        calculationOfDeflectionMillimeters(&parametersThirdOpticalSpot);		
+        pressureCalculation(&parametersFirstOpticalSpot);							
         convertToCharAndPassUart_presuareFndCentroid(&parametersThirdOpticalSpot);				
 			}
 			
@@ -637,7 +638,8 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 				if(dataRequestForPC == request_pressureEndCentroid_FourhtOpticalSpot){ 
 				opticalSpotSearch(&parametersFourhtOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersFourhtOpticalSpot);	
-        calculationOfDeflectionMillimeters(&parametersFourhtOpticalSpot);					
+        calculationOfDeflectionMillimeters(&parametersFourhtOpticalSpot);			
+				 pressureCalculation(&parametersFirstOpticalSpot);			
         convertToCharAndPassUart_presuareFndCentroid(&parametersFourhtOpticalSpot);				
 			}
 			/*
@@ -645,10 +647,9 @@ ToStructuresForParser.unionbyteMassStructures= (&byteMass);
 			*/		
 			
 			if(dataRequestForPC==request_pressure){
-				opticalSpotSearch(&parametersFirstOpticalSpot); 
+			  opticalSpotSearch(&parametersFirstOpticalSpot); 
 				calculationOpticalSpotCentroid(&parametersFirstOpticalSpot);
-			//	pressureCalculation(&parametersFirstOpticalSpot);
-				 calculationHeighByPressure(&parametersFirstOpticalSpot);
+				pressureCalculation(&parametersFirstOpticalSpot);
 				convertToCharAndPassUart_Presuare(&ToStructuresForParser, &parametersFirstOpticalSpot);
 			}
 			
@@ -778,8 +779,7 @@ OPTICAL SPOT COORDINATE CALCULATION FUNCTION
   opticalSpotSearchX2(nameStructure);
 	opticalSpotFindingError(nameStructure);
   opticalSpotSearchCentr(nameStructure);
-	   
-	 
+	    
 }
 //void opticalSpotSearch(parametersOpticalSpot* nameStructure){  
 //	
@@ -944,7 +944,7 @@ void initVariablesFirstOpticalSpot(){
 	parametersFirstOpticalSpot.coordinate_x2 = 0;
 	parametersFirstOpticalSpot.centerOfTheOpticalSpot_x = 0;
 	parametersFirstOpticalSpot.centroidDeviation = 0;
-	parametersFirstOpticalSpot.measurementPresuare = 115200000;
+	parametersFirstOpticalSpot.measurementPresuare = 107325000;
 }
 /*
 INITIALIZING VARIABLES OF THE SECOND OPTICAL SPOT 
@@ -1157,7 +1157,7 @@ CONVERSION OF PRESSURE (FROM SENSOR AND DESIGNED) AND DEFLECTION (FROM MICROMETE
 */
 void convertToCharAndPassUart_Presuare(pointerToStructuresForParser *nemeStructe,  parametersOpticalSpot *nemeStructe1){
 			sprintf(CharForUART.transferPackageForLabVIEW_Presuatr, "O%c%d%d\n", nemeStructe1->id_OpticalSpot, (int)(nemeStructe->PneumaticSystemStructures->PressureFromPiezoelectricSensor*100)+10000000,
-	         nemeStructe1->measurementPresuare+200000000);
+	         (int)nemeStructe1->measurementPresuare+200000000);
 			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
 				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
 				}
@@ -1179,9 +1179,10 @@ void convertToCharAndPassUart_millimetrs(parametersOpticalSpot *nemeStructe){
 			}	
 
 void convertToCharAndPassUart_presuareFndCentroid(parametersOpticalSpot *nemeStructe){
-	    sprintf(CharForUART.transferPackageForLabVIEW_presuareFndCentroid, "P%c%d%d\n",nemeStructe->id_OpticalSpot, 
+	    sprintf(CharForUART.transferPackageForLabVIEW_presuareFndCentroid, "P%c%d%d%d\n",nemeStructe->id_OpticalSpot, 
 	                                                                   (int)((PneumaticSystem.PressureFromPiezoelectricSensor*100)+100000000),
-	                                                                   (int)((nemeStructe->centroidDeviation*10000)+50000000));
+	                                                                   (int)((nemeStructe->centroidDeviation*10000)+50000000),
+																																			 (int)((nemeStructe->measurementPresuare*100)+300000000));
 			if(flagEndTransfer_UART2_DMA1_ForPC==1){      
 				while(flagEndTransfer_UART2_DMA1_ForPC >0){}
 				}
@@ -1208,12 +1209,12 @@ GLUING BYTE ACCEPTED VIA UART FROM MICROMETER
 PRESSURE CALCULATION USING LINEAR INTERPOLATION FUNCTION 
 	*/
 	void pressureCalculation(parametersOpticalSpot* nemeStructure){
-		 int pressureCalculation;
-		 int centoidConvertInt;
-		 centoidConvertInt = (int)(nemeStructure->centroidDeviation*1000);
+		 double pressureCalculation;
+		 double centoidConvertInt;
+		 centoidConvertInt = (nemeStructure->centroidDeviation);
 		// First Segment
 		if(centoidConvertInt<=endFirstSegment){
-		 pressureCalculation = coefficient_k1*centoidConvertInt - coefficient_b1;
+		 pressureCalculation = coefficient_k1*centoidConvertInt + coefficient_b1;
 		}
 		// Second Segment
 			if(centoidConvertInt>endFirstSegment && centoidConvertInt<=endSecondSegment){
@@ -1233,18 +1234,6 @@ PRESSURE CALCULATION USING LINEAR INTERPOLATION FUNCTION
 		}
 				nemeStructure->measurementPresuare = pressureCalculation;
 	}
-void calculationHeighByPressure(parametersOpticalSpot* nemeStructure){
-	
-	int pressureDivision = nemeStructure->measurementPresuare/seaLevelPressure;
-	float gradientMultiplyGasConstant = gasConstant*temperatureGradient;
-	float divideTemperatureByGradient = standardTemperature/gasConstant;
-	float exponentiation = pow(pressureDivision,gasConstant*temperatureGradient);
-	nemeStructure->flightAltitude = (int)((1-exponentiation)*gradientMultiplyGasConstant*1000);
-	
-}
-	
-	
-
 
 
 
